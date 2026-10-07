@@ -1,5 +1,6 @@
 package com.blocksilent.app.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -42,16 +43,29 @@ public class ImportantContactsFragment extends Fragment implements ContactAdapte
         adapter = new ContactAdapter(requireContext(), this);
         rvContacts.setAdapter(adapter);
 
-        database = AppDatabase.getInstance(requireContext().getApplicationContext());
-        database.contactDao().getAllContacts().observe(getViewLifecycleOwner(), contacts -> adapter.setContacts(contacts));
+        Context ctx = getContext();
+        if (ctx != null) {
+            database = AppDatabase.getInstance(ctx.getApplicationContext());
+            database.contactDao().getAllContacts().observe(getViewLifecycleOwner(), contacts -> {
+                if (isAdded()) {
+                    adapter.setContacts(contacts);
+                }
+            });
+        }
 
         btnAddContact.setOnClickListener(v -> showAddContactDialog());
-        btnDndSettings.setOnClickListener(v -> PermissionManager.openDndSettings(requireContext()));
+        btnDndSettings.setOnClickListener(v -> {
+            if (isAdded() && getContext() != null) {
+                PermissionManager.openDndSettings(requireContext());
+            }
+        });
 
         return view;
     }
 
     private void showAddContactDialog() {
+        if (!isAdded() || getContext() == null) return;
+
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_contact, null);
         EditText etName = view.findViewById(R.id.etContactName);
         EditText etPhone = view.findViewById(R.id.etContactPhone);
@@ -60,8 +74,9 @@ public class ImportantContactsFragment extends Fragment implements ContactAdapte
                 .setTitle("Add Important Contact")
                 .setView(view)
                 .setPositiveButton("Add", (dialog, which) -> {
-                    String name = etName.getText().toString().trim();
-                    String phone = etPhone.getText().toString().trim();
+                    if (!isAdded() || getContext() == null) return;
+                    String name = etName.getText() != null ? etName.getText().toString().trim() : "";
+                    String phone = etPhone.getText() != null ? etPhone.getText().toString().trim() : "";
 
                     if (TextUtils.isEmpty(name)) {
                         Toast.makeText(requireContext(), "Contact name is required.", Toast.LENGTH_SHORT).show();
@@ -69,7 +84,9 @@ public class ImportantContactsFragment extends Fragment implements ContactAdapte
                     }
 
                     AppDatabase.databaseWriteExecutor.execute(() -> {
-                        database.contactDao().insert(new ContactEntity(name, phone, true));
+                        if (database != null) {
+                            database.contactDao().insert(new ContactEntity(name, phone, true));
+                        }
                     });
                 })
                 .setNegativeButton("Cancel", null)
@@ -78,6 +95,11 @@ public class ImportantContactsFragment extends Fragment implements ContactAdapte
 
     @Override
     public void onDelete(ContactEntity contact) {
-        AppDatabase.databaseWriteExecutor.execute(() -> database.contactDao().delete(contact));
+        if (contact == null) return;
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            if (database != null) {
+                database.contactDao().delete(contact);
+            }
+        });
     }
 }

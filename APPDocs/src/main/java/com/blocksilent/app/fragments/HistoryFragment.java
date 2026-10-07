@@ -1,5 +1,6 @@
 package com.blocksilent.app.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,18 +38,32 @@ public class HistoryFragment extends Fragment {
         adapter = new HistoryAdapter(requireContext());
         rvHistory.setAdapter(adapter);
 
-        database = AppDatabase.getInstance(requireContext().getApplicationContext());
-        database.historyDao().getAllHistory().observe(getViewLifecycleOwner(), history -> adapter.setHistory(history));
+        Context ctx = getContext();
+        if (ctx != null) {
+            database = AppDatabase.getInstance(ctx.getApplicationContext());
+            database.historyDao().getAllHistory().observe(getViewLifecycleOwner(), history -> {
+                if (isAdded()) {
+                    adapter.setHistory(history);
+                }
+            });
+        }
 
         btnClearHistory.setOnClickListener(v -> {
+            if (!isAdded() || getContext() == null) return;
             new AlertDialog.Builder(requireContext())
                     .setTitle("Clear History")
                     .setMessage("Are you sure you want to clear all activity history logs?")
                     .setPositiveButton("Clear", (dialog, which) -> {
                         AppDatabase.databaseWriteExecutor.execute(() -> {
-                            database.historyDao().deleteAll();
+                            if (database != null) {
+                                database.historyDao().deleteAll();
+                            }
                             if (getActivity() != null) {
-                                getActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "History cleared.", Toast.LENGTH_SHORT).show());
+                                getActivity().runOnUiThread(() -> {
+                                    if (isAdded() && getContext() != null) {
+                                        Toast.makeText(requireContext(), "History cleared.", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                         });
                     })

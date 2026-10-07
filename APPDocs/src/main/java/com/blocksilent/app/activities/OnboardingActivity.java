@@ -209,11 +209,11 @@ public class OnboardingActivity extends AppCompatActivity {
             if (isGranted) {
                 btn.setText("✓ Granted");
                 btn.setEnabled(false);
-                btn.setTextColor(Color.parseColor("#10B981"));
+                btn.setTextColor(androidx.core.content.ContextCompat.getColor(OnboardingActivity.this, R.color.status_active));
             } else {
                 btn.setText("Grant");
                 btn.setEnabled(true);
-                btn.setTextColor(Color.parseColor("#3F51B5"));
+                btn.setTextColor(androidx.core.content.ContextCompat.getColor(OnboardingActivity.this, R.color.primary));
                 btn.setOnClickListener(v -> action.run());
             }
         }

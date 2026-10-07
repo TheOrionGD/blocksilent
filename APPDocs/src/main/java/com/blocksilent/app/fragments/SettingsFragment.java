@@ -1,5 +1,6 @@
 package com.blocksilent.app.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,7 +36,10 @@ public class SettingsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        database = AppDatabase.getInstance(requireContext().getApplicationContext());
+        Context ctx = getContext();
+        if (ctx != null) {
+            database = AppDatabase.getInstance(ctx.getApplicationContext());
+        }
 
         switchAutomation = view.findViewById(R.id.switchSettingsAutomation);
         switchNotifications = view.findViewById(R.id.switchSettingsNotifications);
@@ -64,6 +68,8 @@ public class SettingsFragment extends Fragment {
     }
 
     private void updatePermissionStatus() {
+        if (!isAdded() || getContext() == null) return;
+
         boolean locGranted = PermissionManager.hasLocationPermission(requireContext());
         tvLocationPermission.setText("Location Permission: " + (locGranted ? "Granted" : "Denied"));
 
@@ -75,7 +81,9 @@ public class SettingsFragment extends Fragment {
     }
 
     private void loadSettingsFromDb() {
+        if (!isAdded() || database == null) return;
         database.settingsDao().getSettings().observe(getViewLifecycleOwner(), settings -> {
+            if (!isAdded()) return;
             if (settings != null) {
                 switchAutomation.setOnCheckedChangeListener(null);
                 switchNotifications.setOnCheckedChangeListener(null);
@@ -101,8 +109,17 @@ public class SettingsFragment extends Fragment {
     }
 
     private void setupListeners() {
-        btnPermissions.setOnClickListener(v -> PermissionManager.openAppSettings(requireContext()));
-        btnDnd.setOnClickListener(v -> PermissionManager.openDndSettings(requireContext()));
+        btnPermissions.setOnClickListener(v -> {
+            if (isAdded() && getContext() != null) {
+                PermissionManager.openAppSettings(requireContext());
+            }
+        });
+
+        btnDnd.setOnClickListener(v -> {
+            if (isAdded() && getContext() != null) {
+                PermissionManager.openDndSettings(requireContext());
+            }
+        });
 
         btnImportantContacts.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
@@ -126,24 +143,33 @@ public class SettingsFragment extends Fragment {
     }
 
     private void showClearAllDataConfirmation() {
+        if (!isAdded() || getContext() == null) return;
+
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete All Local Data?")
                 .setMessage("This will permanently delete all saved blocks, timetables, history, and settings from your device. Are you sure?")
                 .setPositiveButton("Delete Everything", (dialog, which) -> {
+                    Context appContext = requireContext().getApplicationContext();
                     AppDatabase.databaseWriteExecutor.execute(() -> {
-                        GeofenceManager geofenceManager = new GeofenceManager(requireContext().getApplicationContext());
+                        GeofenceManager geofenceManager = new GeofenceManager(appContext);
                         geofenceManager.unregisterAllGeofences();
 
-                        database.blockDao().deleteAll();
-                        database.timetableDao().deleteAll();
-                        database.historyDao().deleteAll();
-                        database.contactDao().deleteAll();
-                        database.settingsDao().deleteAll();
+                        if (database != null) {
+                            database.blockDao().deleteAll();
+                            database.timetableDao().deleteAll();
+                            database.historyDao().deleteAll();
+                            database.contactDao().deleteAll();
+                            database.activeGeofenceStateDao().deleteAll();
+                            // Reset with default settings to prevent null pointer exceptions
+                            database.settingsDao().insertOrUpdate(new SettingsEntity(true, true, "NORMAL", 0, false));
+                        }
 
                         if (getActivity() != null) {
                             getActivity().runOnUiThread(() -> {
-                                Toast.makeText(requireContext(), "All local data deleted.", Toast.LENGTH_SHORT).show();
-                                updatePermissionStatus();
+                                if (isAdded() && getContext() != null) {
+                                    Toast.makeText(requireContext(), "All local data reset.", Toast.LENGTH_SHORT).show();
+                                    updatePermissionStatus();
+                                }
                             });
                         }
                     });

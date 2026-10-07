@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.blocksilent.app.R;
+import com.blocksilent.app.utils.LocationHelper;
 import com.blocksilent.app.utils.PermissionManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -22,6 +24,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.Locale;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -51,10 +55,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
+        try {
+            SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.map);
+            if (mapFragment != null) {
+                mapFragment.getMapAsync(this);
+            }
+        } catch (Exception e) {
+            Log.e("MapActivity", "Error loading map fragment", e);
+            Toast.makeText(this, "Map component initializing...", Toast.LENGTH_SHORT).show();
         }
 
         btnConfirm.setOnClickListener(v -> {
@@ -73,58 +82,80 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        if (googleMap == null) return;
         mMap = googleMap;
 
-        if (PermissionManager.hasLocationPermission(this)) {
-            mMap.setMyLocationEnabled(true);
-            // Automatically fetch current high-accuracy location upon opening the map
-            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-                    .addOnSuccessListener(this, location -> {
-                        if (location != null) {
+        try {
+            if (PermissionManager.hasLocationPermission(this)) {
+                mMap.setMyLocationEnabled(true);
+                LocationHelper.fetchAccurateCurrentLocation(this, new LocationHelper.LocationResultCallback() {
+                    @Override
+                    public void onLocationFetched(android.location.Location location) {
+                        runOnUiThread(() -> {
+                            if (isFinishing() || isDestroyed() || location == null) return;
                             LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                             updateSelectedLocation(currentLatLng);
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17.5f));
-                        } else {
-                            fusedLocationClient.getLastLocation().addOnSuccessListener(this, lastLoc -> {
-                                if (lastLoc != null) {
-                                    LatLng currentLatLng = new LatLng(lastLoc.getLatitude(), lastLoc.getLongitude());
-                                    updateSelectedLocation(currentLatLng);
-                                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17.5f));
-                                } else {
-                                    // Campus default fallback coordinates
-                                    LatLng defaultLatLng = new LatLng(12.9716, 77.5946);
-                                    updateSelectedLocation(defaultLatLng);
-                                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLatLng, 16f));
-                                }
-                            });
-                        }
-                    });
-        } else {
-            LatLng defaultLatLng = new LatLng(12.9716, 77.5946);
-            updateSelectedLocation(defaultLatLng);
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLatLng, 16f));
+                            if (mMap != null) {
+                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17.5f));
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        runOnUiThread(() -> fallbackCampusLocation());
+                    }
+                });
+            } else {
+                fallbackCampusLocation();
+            }
+        } catch (SecurityException se) {
+            Log.w("MapActivity", "SecurityException enabling my location", se);
+            fallbackCampusLocation();
+        } catch (Exception e) {
+            Log.e("MapActivity", "Exception on map ready", e);
+            fallbackCampusLocation();
         }
 
         mMap.setOnMapClickListener(this::updateSelectedLocation);
     }
 
+    private void fallbackCampusLocation() {
+        if (isFinishing() || isDestroyed()) return;
+        LatLng defaultLatLng = new LatLng(12.9716, 77.5946);
+        updateSelectedLocation(defaultLatLng);
+        if (mMap != null) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLatLng, 16f));
+        }
+    }
+
     private void updateSelectedLocation(LatLng latLng) {
+        if (latLng == null || isFinishing() || isDestroyed()) return;
         selectedLatLng = latLng;
-        mMap.clear();
+        if (mMap != null) {
+            try {
+                mMap.clear();
 
-        // Add Marker
-        mMap.addMarker(new MarkerOptions()
-                .position(latLng)
-                .title("Target Geofence Center"));
+                mMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title("Target Geofence Center"));
 
-        // Draw Geofence Radius Circle
-        mMap.addCircle(new CircleOptions()
-                .center(latLng)
-                .radius(selectedRadius)
-                .strokeColor(Color.parseColor("#3F51B5"))
-                .fillColor(Color.parseColor("#333F51B5"))
-                .strokeWidth(3f));
+                int primaryColor = androidx.core.content.ContextCompat.getColor(this, R.color.primary);
+                int fillColor = (primaryColor & 0x00FFFFFF) | 0x33000000;
 
-        tvCoords.setText(String.format("Lat: %.6f, Lng: %.6f (Radius: %.0fm)", latLng.latitude, latLng.longitude, selectedRadius));
+                mMap.addCircle(new CircleOptions()
+                        .center(latLng)
+                        .radius(selectedRadius)
+                        .strokeColor(primaryColor)
+                        .fillColor(fillColor)
+                        .strokeWidth(3f));
+            } catch (Exception e) {
+                Log.e("MapActivity", "Error drawing on map", e);
+            }
+        }
+
+        if (tvCoords != null) {
+            tvCoords.setText(String.format(Locale.US, "Lat: %.6f, Lng: %.6f (Radius: %.0fm)", latLng.latitude, latLng.longitude, selectedRadius));
+        }
     }
 }

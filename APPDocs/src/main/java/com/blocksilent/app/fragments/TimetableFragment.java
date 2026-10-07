@@ -1,6 +1,7 @@
 package com.blocksilent.app.fragments;
 
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -9,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -50,8 +50,15 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
         adapter = new TimetableAdapter(requireContext(), this);
         rvTimetable.setAdapter(adapter);
 
-        database = AppDatabase.getInstance(requireContext().getApplicationContext());
-        database.timetableDao().getAllTimetables().observe(getViewLifecycleOwner(), timetables -> adapter.setTimetables(timetables));
+        Context ctx = getContext();
+        if (ctx != null) {
+            database = AppDatabase.getInstance(ctx.getApplicationContext());
+            database.timetableDao().getAllTimetables().observe(getViewLifecycleOwner(), timetables -> {
+                if (isAdded()) {
+                    adapter.setTimetables(timetables);
+                }
+            });
+        }
 
         btnAddTimetable.setOnClickListener(v -> showAddTimetableDialog());
 
@@ -59,6 +66,8 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
     }
 
     private void showAddTimetableDialog() {
+        if (!isAdded() || getContext() == null) return;
+
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_timetable, null);
         EditText etSubject = dialogView.findViewById(R.id.etDialogSubject);
         Spinner spinnerDay = dialogView.findViewById(R.id.spinnerDialogDay);
@@ -71,6 +80,7 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
         final String[] endTimeHolder = {"10:00 AM"};
 
         btnStartTime.setOnClickListener(v -> {
+            if (!isAdded() || getContext() == null) return;
             Calendar mcurrentTime = Calendar.getInstance();
             int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
             int minute = mcurrentTime.get(Calendar.MINUTE);
@@ -78,7 +88,7 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
                 String amPm = selectedHour >= 12 ? "PM" : "AM";
                 int h = selectedHour % 12;
                 if (h == 0) h = 12;
-                startTimeHolder[0] = String.format(Locale.getDefault(), "%02d:%02d %s", h, selectedMinute, amPm);
+                startTimeHolder[0] = String.format(Locale.US, "%02d:%02d %s", h, selectedMinute, amPm);
                 btnStartTime.setText(startTimeHolder[0]);
             }, hour, minute, false);
             mTimePicker.setTitle("Select Start Time");
@@ -86,6 +96,7 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
         });
 
         btnEndTime.setOnClickListener(v -> {
+            if (!isAdded() || getContext() == null) return;
             Calendar mcurrentTime = Calendar.getInstance();
             int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
             int minute = mcurrentTime.get(Calendar.MINUTE);
@@ -93,7 +104,7 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
                 String amPm = selectedHour >= 12 ? "PM" : "AM";
                 int h = selectedHour % 12;
                 if (h == 0) h = 12;
-                endTimeHolder[0] = String.format(Locale.getDefault(), "%02d:%02d %s", h, selectedMinute, amPm);
+                endTimeHolder[0] = String.format(Locale.US, "%02d:%02d %s", h, selectedMinute, amPm);
                 btnEndTime.setText(endTimeHolder[0]);
             }, hour, minute, false);
             mTimePicker.setTitle("Select End Time");
@@ -114,6 +125,7 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
         List<BlockEntity> blockList = new ArrayList<>();
         List<String> blockNames = new ArrayList<>();
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            if (database == null) return;
             List<BlockEntity> blocks = database.blockDao().getAllBlocksSync();
             if (blocks != null) {
                 blockList.addAll(blocks);
@@ -121,10 +133,15 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
                     blockNames.add(b.getName());
                 }
             }
+            if (blockNames.isEmpty()) {
+                blockNames.add("Default Campus Area");
+            }
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    ArrayAdapter<String> blockAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, blockNames);
-                    spinnerBlock.setAdapter(blockAdapter);
+                    if (isAdded() && getContext() != null) {
+                        ArrayAdapter<String> blockAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, blockNames);
+                        spinnerBlock.setAdapter(blockAdapter);
+                    }
                 });
             }
         });
@@ -133,24 +150,29 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
                 .setTitle("Add Class Timetable")
                 .setView(dialogView)
                 .setPositiveButton("Save", (dialog, which) -> {
-                    String subject = etSubject.getText().toString().trim();
+                    if (!isAdded() || getContext() == null) return;
+                    String subject = etSubject.getText() != null ? etSubject.getText().toString().trim() : "";
                     if (TextUtils.isEmpty(subject)) {
                         Toast.makeText(requireContext(), "Subject name required.", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    String day = (String) spinnerDay.getSelectedItem();
-                    String mode = (String) spinnerSoundMode.getSelectedItem();
+                    String day = spinnerDay.getSelectedItem() != null ? (String) spinnerDay.getSelectedItem() : "Monday";
+                    String mode = spinnerSoundMode.getSelectedItem() != null ? (String) spinnerSoundMode.getSelectedItem() : "SILENT";
 
                     int selectedBlockIndex = spinnerBlock.getSelectedItemPosition();
                     long blockId = (selectedBlockIndex >= 0 && selectedBlockIndex < blockList.size()) ? blockList.get(selectedBlockIndex).getId() : 1;
-                    String blockName = (selectedBlockIndex >= 0 && selectedBlockIndex < blockList.size()) ? blockList.get(selectedBlockIndex).getName() : "CSE Block";
+                    String blockName = (selectedBlockIndex >= 0 && selectedBlockIndex < blockList.size()) ? blockList.get(selectedBlockIndex).getName() : "Campus Block";
 
                     TimetableEntity timetable = new TimetableEntity(
                             subject, day, startTimeHolder[0], endTimeHolder[0], blockId, blockName, mode, true
                     );
 
-                    AppDatabase.databaseWriteExecutor.execute(() -> database.timetableDao().insert(timetable));
+                    AppDatabase.databaseWriteExecutor.execute(() -> {
+                        if (database != null) {
+                            database.timetableDao().insert(timetable);
+                        }
+                    });
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
@@ -158,14 +180,29 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
 
     @Override
     public void onDelete(TimetableEntity timetable) {
-        AppDatabase.databaseWriteExecutor.execute(() -> database.timetableDao().delete(timetable));
+        if (!isAdded() || getContext() == null || timetable == null) return;
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete Timetable Entry")
+                .setMessage("Are you sure you want to delete " + timetable.getSubjectName() + "?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    AppDatabase.databaseWriteExecutor.execute(() -> {
+                        if (database != null) {
+                            database.timetableDao().delete(timetable);
+                        }
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     @Override
     public void onToggleEnable(TimetableEntity timetable, boolean enabled) {
+        if (timetable == null) return;
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            timetable.setEnabled(enabled);
-            database.timetableDao().update(timetable);
+            if (database != null) {
+                timetable.setEnabled(enabled);
+                database.timetableDao().update(timetable);
+            }
         });
     }
 }

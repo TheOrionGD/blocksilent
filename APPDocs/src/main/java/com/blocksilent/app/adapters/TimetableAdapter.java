@@ -53,13 +53,13 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.Time
         holder.tvBlockMode.setText(item.getBlockName() + " → " + mode);
         if ("SILENT".equalsIgnoreCase(mode)) {
             holder.tvBlockMode.setBackgroundResource(R.drawable.bg_badge_silent);
-            holder.tvBlockMode.setTextColor(android.graphics.Color.parseColor("#8B5CF6"));
+            holder.tvBlockMode.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.mode_silent));
         } else if ("VIBRATE".equalsIgnoreCase(mode)) {
             holder.tvBlockMode.setBackgroundResource(R.drawable.bg_badge_vibrate);
-            holder.tvBlockMode.setTextColor(android.graphics.Color.parseColor("#06B6D4"));
+            holder.tvBlockMode.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.mode_vibrate));
         } else {
             holder.tvBlockMode.setBackgroundResource(R.drawable.bg_badge_normal);
-            holder.tvBlockMode.setTextColor(android.graphics.Color.parseColor("#10B981"));
+            holder.tvBlockMode.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.mode_normal));
         }
 
         holder.switchEnable.setOnCheckedChangeListener(null);

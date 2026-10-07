@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
         SettingsEntity.class,
         com.blocksilent.app.database.entities.ActiveGeofenceStateEntity.class
     },
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -65,32 +65,9 @@ public abstract class AppDatabase extends RoomDatabase {
         public void onCreate(@NonNull SupportSQLiteDatabase db) {
             super.onCreate(db);
             databaseWriteExecutor.execute(() -> {
-                // Populate initial sample blocks required by specification
-                BlockDao blockDao = INSTANCE.blockDao();
-
-                // Initial sample blocks:
-                // 1. CSE Block - Silent - 50m
-                blockDao.insert(new BlockEntity("CSE Block", 12.9716, 77.5946, 50.0f, "SILENT", true, 2));
-
-                // 2. Library - Silent - 40m
-                blockDao.insert(new BlockEntity("Library", 12.9720, 77.5950, 40.0f, "SILENT", true, 4));
-
-                // 3. Computer Lab - Vibrate - 50m
-                blockDao.insert(new BlockEntity("Computer Lab", 12.9710, 77.5940, 50.0f, "VIBRATE", true, 3));
-
-                // 4. Canteen - Normal - 50m
-                blockDao.insert(new BlockEntity("Canteen", 12.9725, 77.5955, 50.0f, "NORMAL", true, 5));
-
-                // 5. Auditorium - Silent - 60m
-                blockDao.insert(new BlockEntity("Auditorium", 12.9730, 77.5960, 60.0f, "SILENT", true, 1));
-
-                // Populate initial Settings
+                // Initialize default application settings with clean database
                 SettingsDao settingsDao = INSTANCE.settingsDao();
                 settingsDao.insertOrUpdate(new SettingsEntity(true, true, "NORMAL", 0, true));
-
-                // Populate initial sample Important Contact
-                ContactDao contactDao = INSTANCE.contactDao();
-                contactDao.insert(new ContactEntity("Parents / Guardian", "+1234567890", true));
             });
         }
     };

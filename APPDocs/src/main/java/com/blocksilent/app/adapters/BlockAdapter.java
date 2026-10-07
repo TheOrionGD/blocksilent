@@ -57,23 +57,23 @@ public class BlockAdapter extends RecyclerView.Adapter<BlockAdapter.BlockViewHol
         holder.tvBlockMode.setText(mode);
         if ("SILENT".equalsIgnoreCase(mode)) {
             holder.tvBlockMode.setBackgroundResource(R.drawable.bg_badge_silent);
-            holder.tvBlockMode.setTextColor(Color.parseColor("#8B5CF6"));
+            holder.tvBlockMode.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.mode_silent));
         } else if ("VIBRATE".equalsIgnoreCase(mode)) {
             holder.tvBlockMode.setBackgroundResource(R.drawable.bg_badge_vibrate);
-            holder.tvBlockMode.setTextColor(Color.parseColor("#06B6D4"));
+            holder.tvBlockMode.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.mode_vibrate));
         } else {
             holder.tvBlockMode.setBackgroundResource(R.drawable.bg_badge_normal);
-            holder.tvBlockMode.setTextColor(Color.parseColor("#10B981"));
+            holder.tvBlockMode.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.mode_normal));
         }
 
         if (block.isEnabled()) {
             holder.tvBlockStatus.setText("Active");
             holder.tvBlockStatus.setBackgroundResource(R.drawable.bg_badge_active);
-            holder.tvBlockStatus.setTextColor(Color.parseColor("#059669"));
+            holder.tvBlockStatus.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.status_active));
         } else {
             holder.tvBlockStatus.setText("Disabled");
             holder.tvBlockStatus.setBackgroundResource(R.drawable.bg_badge_inactive);
-            holder.tvBlockStatus.setTextColor(Color.parseColor("#DC2626"));
+            holder.tvBlockStatus.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.status_inactive));
         }
 
         holder.switchEnable.setOnCheckedChangeListener(null);

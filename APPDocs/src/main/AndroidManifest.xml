@@ -13,6 +13,9 @@
     <!-- Permission for Do Not Disturb / Sound Mode Control -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
+    <!-- Permission to Request Ignore Battery Optimization -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- Device Restart Handling -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 

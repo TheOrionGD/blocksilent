@@ -9,7 +9,7 @@
     app:cardBackgroundColor="@color/card_background"
     app:cardCornerRadius="20dp"
     app:cardElevation="2dp"
-    app:strokeColor="#E5E7EB"
+    app:strokeColor="@color/card_stroke"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -34,7 +34,7 @@
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:background="@drawable/ic_launcher_background"
-                    android:backgroundTint="#F0FDF4"
+                    android:backgroundTint="@color/badge_active_bg"
                     android:padding="8dp"
                     android:src="@drawable/ic_timetable"
                     app:tint="@color/status_active" />

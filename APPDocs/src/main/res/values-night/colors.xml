@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand / Theme Primary Colors (Vibrant high contrast on dark) -->
+    <color name="primary">#818CF8</color>
+    <color name="primary_dark">#6366F1</color>
+    <color name="primary_light">#1E1B4B</color>
+    <color name="color_accent">#22D3EE</color>
+
+    <!-- Surfaces and Backgrounds (Deep OLED obsidian + elevated navy slate) -->
+    <color name="background_light">#0B0F19</color>
+    <color name="card_background">#131B2E</color>
+    <color name="surface_variant">#1E293B</color>
+    <color name="card_stroke">#25334D</color>
+    <color name="divider_color">#1E293B</color>
+
+    <!-- High-Contrast Text Tokens (Crystal clear light typography on dark surfaces) -->
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_tertiary">#64748B</color>
+
+    <!-- Status Indicators -->
+    <color name="status_active">#34D399</color>
+    <color name="status_inactive">#F87171</color>
+    <color name="status_warning">#FBBF24</color>
+
+    <!-- Sound Modes -->
+    <color name="mode_silent">#A78BFA</color>
+    <color name="mode_vibrate">#22D3EE</color>
+    <color name="mode_normal">#34D399</color>
+
+    <!-- Badges & Tags Backgrounds (Translucent dark glow) -->
+    <color name="badge_active_bg">#064E3B</color>
+    <color name="badge_active_border">#059669</color>
+    <color name="badge_inactive_bg">#4C0519</color>
+    <color name="badge_inactive_border">#E11D48</color>
+    <color name="badge_normal_bg">#064E3B</color>
+    <color name="badge_normal_border">#34D399</color>
+    <color name="badge_silent_bg">#3B0764</color>
+    <color name="badge_silent_border">#A78BFA</color>
+    <color name="badge_vibrate_bg">#083344</color>
+    <color name="badge_vibrate_border">#22D3EE</color>
+
+    <!-- Semantic Alerts & Cards -->
+    <color name="warning_card_bg">#2A1805</color>
+    <color name="warning_card_stroke">#78350F</color>
+    <color name="warning_card_text_title">#FCD34D</color>
+    <color name="warning_card_text_desc">#FDE68A</color>
+    <color name="warning_card_btn_bg">#D97706</color>
+
+    <color name="danger_card_bg">#2A0912</color>
+    <color name="danger_card_stroke">#881337</color>
+    <color name="danger_card_text_title">#FCA5A5</color>
+    <color name="danger_card_text_desc">#FECACA</color>
+    <color name="danger_card_btn_bg">#DC2626</color>
+
+    <color name="hero_strip_bg">#1E293B</color>
+    <color name="bottom_nav_bg">#131B2E</color>
+    <color name="nav_item_selected">#818CF8</color>
+    <color name="nav_item_unselected">#64748B</color>
+</resources>

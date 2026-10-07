@@ -22,7 +22,7 @@
             app:cardBackgroundColor="@color/card_background"
             app:cardCornerRadius="24dp"
             app:cardElevation="3dp"
-            app:strokeColor="#E5E7EB"
+            app:strokeColor="@color/card_stroke"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -76,7 +76,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:background="#F8FAFC"
+                    android:background="@drawable/bg_hero_strip"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:padding="14dp">
@@ -138,7 +138,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Geofencing: 5 Active"
+                        android:text="Geofencing: Ready"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 
@@ -163,9 +163,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:visibility="gone"
-            app:cardBackgroundColor="#FFFBEB"
+            app:cardBackgroundColor="@color/warning_card_bg"
             app:cardCornerRadius="16dp"
-            app:strokeColor="#FDE68A"
+            app:strokeColor="@color/warning_card_stroke"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -178,7 +178,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="⚠️ Background Location Required"
-                    android:textColor="#B45309"
+                    android:textColor="@color/warning_card_text_title"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -187,7 +187,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="To trigger silent mode when the screen is locked or app is closed, select 'Allow all the time' in location settings."
-                    android:textColor="#92400E"
+                    android:textColor="@color/warning_card_text_desc"
                     android:textSize="13sp" />
 
                 <Button
@@ -196,7 +196,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:layout_marginTop="8dp"
-                    android:backgroundTint="#D97706"
+                    android:backgroundTint="@color/warning_card_btn_bg"
                     android:minHeight="0dp"
                     android:text="Enable 'Allow all the time'"
                     android:textSize="12sp" />
@@ -210,9 +210,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:visibility="gone"
-            app:cardBackgroundColor="#FEF2F2"
+            app:cardBackgroundColor="@color/danger_card_bg"
             app:cardCornerRadius="16dp"
-            app:strokeColor="#FECACA"
+            app:strokeColor="@color/danger_card_stroke"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -225,7 +225,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="⚠️ Notification Policy (DND) Access Needed"
-                    android:textColor="#B91C1C"
+                    android:textColor="@color/danger_card_text_title"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -234,7 +234,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="Silent mode requires Android Notification Policy Access. Without this, VIBRATE will be used instead."
-                    android:textColor="#991B1B"
+                    android:textColor="@color/danger_card_text_desc"
                     android:textSize="13sp" />
 
                 <Button
@@ -243,7 +243,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:layout_marginTop="8dp"
-                    android:backgroundTint="#DC2626"
+                    android:backgroundTint="@color/danger_card_btn_bg"
                     android:minHeight="0dp"
                     android:text="Grant DND Access"
                     android:textSize="12sp" />
@@ -265,7 +265,7 @@
                 app:cardBackgroundColor="@color/card_background"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="2dp"
-                app:strokeColor="#E5E7EB"
+                app:strokeColor="@color/card_stroke"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -286,7 +286,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="5"
+                        android:text="0"
                         android:textColor="@color/primary"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -301,7 +301,7 @@
                 app:cardBackgroundColor="@color/card_background"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="2dp"
-                app:strokeColor="#E5E7EB"
+                app:strokeColor="@color/card_stroke"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -398,7 +398,7 @@
             app:cardBackgroundColor="@color/card_background"
             app:cardCornerRadius="20dp"
             app:cardElevation="2dp"
-            app:strokeColor="#E5E7EB"
+            app:strokeColor="@color/card_stroke"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -464,10 +464,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="24dp"
-            app:cardBackgroundColor="#FEF2F2"
+            app:cardBackgroundColor="@color/danger_card_bg"
             app:cardCornerRadius="18dp"
             app:cardElevation="1dp"
-            app:strokeColor="#FEE2E2"
+            app:strokeColor="@color/danger_card_stroke"
             app:strokeWidth="1dp">
 
             <LinearLayout

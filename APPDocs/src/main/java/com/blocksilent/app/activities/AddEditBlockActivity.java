@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -18,6 +19,7 @@ import com.blocksilent.app.R;
 import com.blocksilent.app.database.AppDatabase;
 import com.blocksilent.app.database.entities.BlockEntity;
 import com.blocksilent.app.geofence.GeofenceManager;
+import com.blocksilent.app.utils.LocationHelper;
 import com.blocksilent.app.utils.PermissionManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -27,6 +29,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.List;
+import java.util.Locale;
 
 public class AddEditBlockActivity extends AppCompatActivity {
 
@@ -71,7 +74,6 @@ public class AddEditBlockActivity extends AppCompatActivity {
             tvTitle.setText("Edit Block Geofence");
             loadExistingBlockData(existingBlockId);
         } else {
-            // AUTOMATIC LOCATION FETCH: Immediately fetch current live GPS coordinates on opening
             autoFetchCurrentLocation();
         }
 
@@ -85,26 +87,48 @@ public class AddEditBlockActivity extends AppCompatActivity {
         btnSaveBlock.setOnClickListener(v -> saveBlock());
     }
 
-    @SuppressLint("MissingPermission")
     private void autoFetchCurrentLocation() {
-        if (PermissionManager.hasLocationPermission(this)) {
-            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-                    .addOnSuccessListener(this, location -> {
-                        if (location != null) {
-                            etLat.setText(String.format(java.util.Locale.US, "%.6f", location.getLatitude()));
-                            etLng.setText(String.format(java.util.Locale.US, "%.6f", location.getLongitude()));
-                        } else {
-                            fusedLocationClient.getLastLocation().addOnSuccessListener(this, lastLoc -> {
-                                if (lastLoc != null) {
-                                    etLat.setText(String.format(java.util.Locale.US, "%.6f", lastLoc.getLatitude()));
-                                    etLng.setText(String.format(java.util.Locale.US, "%.6f", lastLoc.getLongitude()));
-                                }
-                            });
-                        }
-                    });
-        } else {
+        if (isFinishing() || isDestroyed()) return;
+
+        if (!PermissionManager.hasLocationPermission(this)) {
             PermissionManager.requestLocationPermission(this);
+            return;
         }
+
+        if (!LocationHelper.isGpsEnabled(this)) {
+            Toast.makeText(this, "Please enable GPS / Location Services for accurate geofencing.", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            return;
+        }
+
+        btnUseCurrentLocation.setEnabled(false);
+        btnUseCurrentLocation.setText("Acquiring GPS...");
+
+        LocationHelper.fetchAccurateCurrentLocation(this, new LocationHelper.LocationResultCallback() {
+            @Override
+            public void onLocationFetched(android.location.Location location) {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    btnUseCurrentLocation.setEnabled(true);
+                    btnUseCurrentLocation.setText("Current Location");
+                    if (location != null) {
+                        etLat.setText(String.format(Locale.US, "%.6f", location.getLatitude()));
+                        etLng.setText(String.format(Locale.US, "%.6f", location.getLongitude()));
+                        Toast.makeText(AddEditBlockActivity.this, "Current GPS location acquired!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    btnUseCurrentLocation.setEnabled(true);
+                    btnUseCurrentLocation.setText("Current Location");
+                    Toast.makeText(AddEditBlockActivity.this, message, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
     @Override
@@ -121,8 +145,8 @@ public class AddEditBlockActivity extends AppCompatActivity {
         if (requestCode == REQUEST_MAP_LOCATION && resultCode == RESULT_OK && data != null) {
             double lat = data.getDoubleExtra(MapActivity.EXTRA_LATITUDE, 0.0);
             double lng = data.getDoubleExtra(MapActivity.EXTRA_LONGITUDE, 0.0);
-            etLat.setText(String.format(java.util.Locale.US, "%.6f", lat));
-            etLng.setText(String.format(java.util.Locale.US, "%.6f", lng));
+            etLat.setText(String.format(Locale.US, "%.6f", lat));
+            etLng.setText(String.format(Locale.US, "%.6f", lng));
         }
     }
 
@@ -147,9 +171,10 @@ public class AddEditBlockActivity extends AppCompatActivity {
             BlockEntity block = database.blockDao().getBlockById(id);
             if (block != null) {
                 runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
                     etName.setText(block.getName());
-                    etLat.setText(String.format(java.util.Locale.US, "%.6f", block.getLatitude()));
-                    etLng.setText(String.format(java.util.Locale.US, "%.6f", block.getLongitude()));
+                    etLat.setText(String.format(Locale.US, "%.6f", block.getLatitude()));
+                    etLng.setText(String.format(Locale.US, "%.6f", block.getLongitude()));
                     switchEnable.setChecked(block.isEnabled());
 
                     if ("SILENT".equalsIgnoreCase(block.getSoundMode())) {
@@ -245,6 +270,7 @@ public class AddEditBlockActivity extends AppCompatActivity {
             geofenceManager.registerGeofences(enabledBlocks);
 
             runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
                 Toast.makeText(this, "Block saved successfully!", Toast.LENGTH_SHORT).show();
                 finish();
             });

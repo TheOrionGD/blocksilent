@@ -1,5 +1,6 @@
 package com.blocksilent.app.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import androidx.fragment.app.Fragment;
 
 import com.blocksilent.app.R;
 import com.blocksilent.app.database.AppDatabase;
+import com.blocksilent.app.database.entities.SettingsEntity;
 import com.blocksilent.app.geofence.GeofenceManager;
 
 public class PrivacyFragment extends Fragment {
@@ -32,23 +34,32 @@ public class PrivacyFragment extends Fragment {
     }
 
     private void showClearAllDataConfirmation() {
+        if (!isAdded() || getContext() == null) return;
+
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete All Local Data?")
                 .setMessage("This will permanently delete all saved blocks, timetables, history, and settings from your device. Are you sure?")
                 .setPositiveButton("Delete Everything", (dialog, which) -> {
+                    Context appContext = requireContext().getApplicationContext();
                     AppDatabase.databaseWriteExecutor.execute(() -> {
-                        AppDatabase database = AppDatabase.getInstance(requireContext().getApplicationContext());
-                        GeofenceManager geofenceManager = new GeofenceManager(requireContext().getApplicationContext());
+                        AppDatabase database = AppDatabase.getInstance(appContext);
+                        GeofenceManager geofenceManager = new GeofenceManager(appContext);
                         geofenceManager.unregisterAllGeofences();
 
                         database.blockDao().deleteAll();
                         database.timetableDao().deleteAll();
                         database.historyDao().deleteAll();
                         database.contactDao().deleteAll();
-                        database.settingsDao().deleteAll();
+                        database.activeGeofenceStateDao().deleteAll();
+                        // Reset with default settings
+                        database.settingsDao().insertOrUpdate(new SettingsEntity(true, true, "NORMAL", 0, false));
 
                         if (getActivity() != null) {
-                            getActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "All local data deleted.", Toast.LENGTH_SHORT).show());
+                            getActivity().runOnUiThread(() -> {
+                                if (isAdded() && getContext() != null) {
+                                    Toast.makeText(requireContext(), "All local data reset.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                     });
                 })

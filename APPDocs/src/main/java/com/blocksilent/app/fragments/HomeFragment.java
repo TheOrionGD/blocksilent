@@ -152,11 +152,11 @@ public class HomeFragment extends Fragment {
         if (isReady) {
             tvAutomationStatus.setText("● ACTIVE");
             tvAutomationStatus.setBackgroundResource(R.drawable.bg_badge_active);
-            tvAutomationStatus.setTextColor(android.graphics.Color.parseColor("#10B981"));
+            tvAutomationStatus.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_active));
         } else {
             tvAutomationStatus.setText("● NOT READY");
             tvAutomationStatus.setBackgroundResource(R.drawable.bg_badge_inactive);
-            tvAutomationStatus.setTextColor(android.graphics.Color.parseColor("#EF4444"));
+            tvAutomationStatus.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_inactive));
         }
 
         int registeredCount = geofenceManager.getRegisteredGeofencesCount();
@@ -166,13 +166,13 @@ public class HomeFragment extends Fragment {
         tvCurrentSoundMode.setText(currentSound);
         if (SoundModeManager.MODE_SILENT.equalsIgnoreCase(currentSound)) {
             tvCurrentSoundMode.setBackgroundResource(R.drawable.bg_badge_silent);
-            tvCurrentSoundMode.setTextColor(android.graphics.Color.parseColor("#8B5CF6"));
+            tvCurrentSoundMode.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.mode_silent));
         } else if (SoundModeManager.MODE_VIBRATE.equalsIgnoreCase(currentSound)) {
             tvCurrentSoundMode.setBackgroundResource(R.drawable.bg_badge_vibrate);
-            tvCurrentSoundMode.setTextColor(android.graphics.Color.parseColor("#06B6D4"));
+            tvCurrentSoundMode.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.mode_vibrate));
         } else {
             tvCurrentSoundMode.setBackgroundResource(R.drawable.bg_badge_normal);
-            tvCurrentSoundMode.setTextColor(android.graphics.Color.parseColor("#10B981"));
+            tvCurrentSoundMode.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.mode_normal));
         }
 
         AppDatabase.databaseWriteExecutor.execute(() -> {
@@ -277,14 +277,17 @@ public class HomeFragment extends Fragment {
         int regCount = geofenceManager.getRegisteredGeofencesCount();
         String regStatus = geofenceManager.getRegistrationStatus();
 
+        int activeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_active);
+        int inactiveColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_inactive);
+
         diagLocationPerm.setText("Location Permission: " + (loc ? "✓ GRANTED" : "✗ DENIED"));
-        diagLocationPerm.setTextColor(android.graphics.Color.parseColor(loc ? "#10B981" : "#EF4444"));
+        diagLocationPerm.setTextColor(loc ? activeColor : inactiveColor);
 
         diagBackgroundPerm.setText("Background Location: " + (bgLoc ? "✓ GRANTED (Allow all the time)" : "✗ NOT GRANTED"));
-        diagBackgroundPerm.setTextColor(android.graphics.Color.parseColor(bgLoc ? "#10B981" : "#EF4444"));
+        diagBackgroundPerm.setTextColor(bgLoc ? activeColor : inactiveColor);
 
         diagLocationServices.setText("Location Services (GPS): " + (gps ? "✓ ON" : "✗ OFF"));
-        diagLocationServices.setTextColor(android.graphics.Color.parseColor(gps ? "#10B981" : "#EF4444"));
+        diagLocationServices.setTextColor(gps ? activeColor : inactiveColor);
 
         diagGeofenceReg.setText("Geofencing Registration: " + regStatus + " (" + regCount + " registered)");
         diagDndPolicy.setText("Sound / DND Policy Access: " + (dnd ? "✓ GRANTED" : "⚠️ NOT GRANTED"));
