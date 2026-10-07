@@ -1,0 +1,157 @@
+================================================================================
+                    📱 APP LAUNCH – REQUIRED DETAILS
+================================================================================
+Application: BlockSilent
+Package Name: com.blocksilent.app
+Platform: Android (Native Java)
+================================================================================
+
+--------------------------------------------------------------------------------
+🔹 1. DEVELOPER ACCOUNT
+--------------------------------------------------------------------------------
+* Google Account / Gmail: [Your Team / Developer Google Account]
+* Google Play Console Account: Standard Developer Account
+* Developer Name: BlockSilent Team
+* Developer Email: support@blocksilent.app
+* Developer Phone: [Your Contact Phone]
+* Developer Address: [Your Organization / Developer Address]
+* Identity Verification: Government ID / Organization DUNS (if company)
+* Registration Fee: $25 USD one-time registration fee
+
+--------------------------------------------------------------------------------
+🔹 2. APP DETAILS
+--------------------------------------------------------------------------------
+* App Name: BlockSilent - Auto Sound Mode
+* Package Name / Application ID: com.blocksilent.app
+* App Category: Productivity (Secondary: Education / Tools)
+* App Type: Free (No in-app purchases, No subscriptions)
+* App Version: 1.0
+* Version Code: 1
+* Minimum SDK: 24 (Android 7.0 Nougat)
+* Target SDK: 36
+* Compile SDK: 36
+* Support Email: support@blocksilent.app
+* Support Website: https://blocksilent.app (or GitHub Repository URL)
+
+* Short Description (Max 80 characters):
+Smart campus geofencing that automatically silences your phone in class & lab.
+
+* Full Description (Formatted for Google Play Console):
+Never get caught with a ringing phone in class, library, or exam hall again!
+
+BlockSilent is a battery-efficient, privacy-first Android application that automatically switches your phone's sound profile (Silent, Vibrate, Normal) based on your real-time campus locations and weekly academic timetable.
+
+🌟 KEY FEATURES:
+• True Background Geofencing: Powered by Android Location Services. Detects location boundaries even when the app is closed or your phone screen is locked.
+• Dynamic Sound Automation: Automatically applies SILENT in lecture halls/exam halls, VIBRATE in computer labs, and restores NORMAL when you step outside.
+• Smart Timetable Schedule: Integrates with your weekly subject schedule so your sound profile automatically syncs with active class hours.
+• Priority Resolution: Intelligently handles overlapping locations (Exam Hall > Classroom > Lab > Library).
+• Zero Cloud Tracking & 100% Private: All block coordinates, schedules, and logs remain strictly on your device in a secure local database.
+• Battery Conscious: Uses event-driven geofences rather than continuous GPS polling to preserve your battery throughout the day.
+• Emergency Override & DND Priority: Instantly pause automation for 1–4 hours or whitelist critical contacts.
+
+📍 REQUIRED PERMISSIONS & WHY:
+• Location (Foreground & Background): To detect when you enter or leave configured college blocks.
+• Do Not Disturb Access: Required by Android system to safely change ringer mode to Silent.
+• Notifications: To inform you when a sound mode transition occurs.
+
+--------------------------------------------------------------------------------
+🔹 3. APP FILES & ARTIFACTS
+--------------------------------------------------------------------------------
+* Signed Android App Bundle (.aab):
+  o:\location\APPDocs\build\outputs\bundle\release\app-release.aab (4.97 MB)
+* Signed Release APK (.apk):
+  o:\location\APPDocs\build\outputs\apk\release\app-release.apk (5.55 MB)
+* Release Keystore:
+  o:\location\APPDocs\release-key.jks
+  Alias: blocksilent
+  Validity: 10,000 days
+* Source Code Directory:
+  o:\location\APPDocs\src\main
+
+--------------------------------------------------------------------------------
+🔹 4. BACKEND & INFRASTRUCTURE DETAILS
+--------------------------------------------------------------------------------
+* Production API URL: None (100% Offline-First / Local Operation)
+* Backend Server: None Required
+* Database: Android Room SQLite Database (blocksilent_database, Version 2)
+  Tables: blocks, timetable, history, contacts, settings, active_geofence_state
+* Firebase Configuration: None used (Zero third-party cloud dependencies)
+* Authentication Setup: None (No login required; full instant access)
+* Storage: Local device SQLite storage
+
+--------------------------------------------------------------------------------
+🔹 5. PRIVACY & LEGAL DETAILS
+--------------------------------------------------------------------------------
+* Privacy Policy URL: https://blocksilent.app/privacy-policy
+* Data Collection: ZERO personal data collected, stored remotely, or shared with third parties.
+* Data Safety Form Declarations (Google Play Console):
+  - Does your app collect or share any user data? -> NO
+  - Is all user data handled locally on-device? -> YES
+  - Is data encrypted in transit? -> N/A (No network transmission)
+  - Account deletion URL? -> N/A (No user accounts; deleting the app removes all data)
+
+--------------------------------------------------------------------------------
+🔹 6. PERMISSIONS SUMMARY
+--------------------------------------------------------------------------------
+1. android.permission.ACCESS_FINE_LOCATION
+   Purpose: Pinpoints geofence boundaries and map coordinates accurately.
+2. android.permission.ACCESS_COARSE_LOCATION
+   Purpose: Approximate location detection.
+3. android.permission.ACCESS_BACKGROUND_LOCATION
+   Purpose: Enables geofencing while the phone is locked or the app is closed.
+4. android.permission.POST_NOTIFICATIONS
+   Purpose: Posts alerts on Android 13+ when sound mode transitions occur.
+5. android.permission.ACCESS_NOTIFICATION_POLICY
+   Purpose: Do Not Disturb access required by Android AudioManager to switch to Silent mode.
+6. android.permission.RECEIVE_BOOT_COMPLETED
+   Purpose: Automatically restores registered geofences after a device reboot.
+7. android.permission.INTERNET & android.permission.ACCESS_NETWORK_STATE
+   Purpose: Loading Google Maps map tiles.
+
+--------------------------------------------------------------------------------
+🔹 7. GOOGLE PLAY CONSOLE CONFIGURATION
+--------------------------------------------------------------------------------
+* App Category: Productivity / Tools
+* Target Audience: Ages 13+ (Students, Teachers, General Public)
+* Content Rating: Everyone (PEGI 3 / ESRB Everyone)
+* Contains Ads: NO
+* App Access: All features available without credentials (No login needed)
+* Distribution: Global / All Selected Countries
+* Pricing: Free
+
+--------------------------------------------------------------------------------
+🔹 8. TESTING CHECKLIST
+--------------------------------------------------------------------------------
+[X] Foreground Entry: App open -> Walk into geofence -> Silent/Vibrate activated.
+[X] Background & Lock Screen: App closed -> Walk into geofence -> Silent mode applied.
+[X] Exit Geofence: Leave block -> Original ringer mode restored.
+[X] Reboot Persistence: Phone restarted -> Geofences restored automatically via BootReceiver.
+[X] Timetable Schedule: Lecture hours take precedence for designated blocks.
+[X] DND Access Fallback: Gracefully falls back to VIBRATE if DND permission is missing.
+[X] Emergency Override: Pauses automation for 1, 2, or 4 hours.
+
+--------------------------------------------------------------------------------
+📌 DETAILS TO COLLECT / DISTRIBUTE AMONG TEAM MEMBERS
+--------------------------------------------------------------------------------
+1. 👤 Developer/Owner Name: BlockSilent Team
+2. 📧 Gmail: [team-email]@gmail.com
+3. 📱 Phone Number: [Developer Phone]
+4. 🏠 Address: [Developer Address]
+5. 📱 App Name: BlockSilent
+6. 📦 Package Name: com.blocksilent.app
+7. 📝 Short Description: Smart campus geofencing that automatically silences your phone in class & lab.
+8. 📄 Full Description: (See Section 2 above)
+9. 🖼️ App Icon: Vector / Adaptive Icon in APPDocs/src/main/res/mipmap/
+10. 📸 Screenshots: Dashboard, My Blocks, Weekly Timetable, Diagnostics, Activity Log
+11. 🌐 Privacy Policy URL: https://blocksilent.app/privacy-policy
+12. 🌐 Website/Support URL: https://github.com/[your-repo]
+13. 📧 Support Email: support@blocksilent.app
+14. 🗂️ App Category: Productivity
+15. 💰 Free/Paid: Free
+16. 🔐 Login Credentials for Reviewer: None (No login required)
+17. 🔧 Backend/API URL: None (Local Room DB)
+18. 🗄️ Database: Android Room (SQLite)
+19. 🔔 Permissions Used: Location (Foreground + Background), Notifications, DND Access, Boot
+20. 📦 Final .aab File: o:\location\APPDocs\build\outputs\bundle\release\app-release.aab
+================================================================================
