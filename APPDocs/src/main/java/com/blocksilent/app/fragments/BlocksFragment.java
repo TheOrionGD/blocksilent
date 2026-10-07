@@ -1,0 +1,95 @@
+package com.blocksilent.app.fragments;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.blocksilent.app.R;
+import com.blocksilent.app.activities.AddEditBlockActivity;
+import com.blocksilent.app.adapters.BlockAdapter;
+import com.blocksilent.app.database.AppDatabase;
+import com.blocksilent.app.database.entities.BlockEntity;
+import com.blocksilent.app.geofence.GeofenceManager;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.util.List;
+
+public class BlocksFragment extends Fragment implements BlockAdapter.OnBlockActionListener {
+
+    private RecyclerView rvBlocks;
+    private FloatingActionButton fabAddBlock;
+    private BlockAdapter adapter;
+    private AppDatabase database;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_blocks, container, false);
+
+        rvBlocks = view.findViewById(R.id.rvBlocks);
+        fabAddBlock = view.findViewById(R.id.fabAddBlock);
+
+        rvBlocks.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new BlockAdapter(requireContext(), this);
+        rvBlocks.setAdapter(adapter);
+
+        database = AppDatabase.getInstance(requireContext().getApplicationContext());
+        database.blockDao().getAllBlocks().observe(getViewLifecycleOwner(), blocks -> adapter.setBlocks(blocks));
+
+        fabAddBlock.setOnClickListener(v -> startActivity(new Intent(requireContext(), AddEditBlockActivity.class)));
+
+        return view;
+    }
+
+    @Override
+    public void onEdit(BlockEntity block) {
+        Intent intent = new Intent(requireContext(), AddEditBlockActivity.class);
+        intent.putExtra(AddEditBlockActivity.EXTRA_BLOCK_ID, block.getId());
+        startActivity(intent);
+    }
+
+    @Override
+    public void onDelete(BlockEntity block) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete Block")
+                .setMessage("Are you sure you want to delete " + block.getName() + "?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    AppDatabase.databaseWriteExecutor.execute(() -> {
+                        database.blockDao().delete(block);
+
+                        // Re-register remaining geofences
+                        List<BlockEntity> enabledBlocks = database.blockDao().getEnabledBlocksSync();
+                        GeofenceManager geofenceManager = new GeofenceManager(requireContext().getApplicationContext());
+                        geofenceManager.registerGeofences(enabledBlocks);
+
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "Block deleted.", Toast.LENGTH_SHORT).show());
+                        }
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    @Override
+    public void onToggleEnable(BlockEntity block, boolean enabled) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            block.setEnabled(enabled);
+            database.blockDao().update(block);
+
+            List<BlockEntity> enabledBlocks = database.blockDao().getEnabledBlocksSync();
+            GeofenceManager geofenceManager = new GeofenceManager(requireContext().getApplicationContext());
+            geofenceManager.registerGeofences(enabledBlocks);
+        });
+    }
+}
