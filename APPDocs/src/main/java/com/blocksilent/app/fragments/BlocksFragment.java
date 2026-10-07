@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,6 +31,10 @@ public class BlocksFragment extends Fragment implements BlockAdapter.OnBlockActi
 
     private RecyclerView rvBlocks;
     private FloatingActionButton fabAddBlock;
+    private TextView tvBlocksSubtitle;
+    private LinearLayout layoutEmptyBlocks;
+    private Button btnEmptyAddBlock;
+
     private BlockAdapter adapter;
     private AppDatabase database;
 
@@ -38,15 +45,33 @@ public class BlocksFragment extends Fragment implements BlockAdapter.OnBlockActi
 
         rvBlocks = view.findViewById(R.id.rvBlocks);
         fabAddBlock = view.findViewById(R.id.fabAddBlock);
+        tvBlocksSubtitle = view.findViewById(R.id.tvBlocksSubtitle);
+        layoutEmptyBlocks = view.findViewById(R.id.layoutEmptyBlocks);
+        btnEmptyAddBlock = view.findViewById(R.id.btnEmptyAddBlock);
 
         rvBlocks.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new BlockAdapter(requireContext(), this);
         rvBlocks.setAdapter(adapter);
 
         database = AppDatabase.getInstance(requireContext().getApplicationContext());
-        database.blockDao().getAllBlocks().observe(getViewLifecycleOwner(), blocks -> adapter.setBlocks(blocks));
+        database.blockDao().getAllBlocks().observe(getViewLifecycleOwner(), blocks -> {
+            if (isAdded()) {
+                adapter.setBlocks(blocks);
+                int count = (blocks != null) ? blocks.size() : 0;
+                tvBlocksSubtitle.setText(count + " geofenced campus zones configured");
+
+                if (count == 0) {
+                    layoutEmptyBlocks.setVisibility(View.VISIBLE);
+                    rvBlocks.setVisibility(View.GONE);
+                } else {
+                    layoutEmptyBlocks.setVisibility(View.GONE);
+                    rvBlocks.setVisibility(View.VISIBLE);
+                }
+            }
+        });
 
         fabAddBlock.setOnClickListener(v -> startActivity(new Intent(requireContext(), AddEditBlockActivity.class)));
+        btnEmptyAddBlock.setOnClickListener(v -> startActivity(new Intent(requireContext(), AddEditBlockActivity.class)));
 
         return view;
     }
@@ -60,6 +85,8 @@ public class BlocksFragment extends Fragment implements BlockAdapter.OnBlockActi
 
     @Override
     public void onDelete(BlockEntity block) {
+        if (!isAdded() || getContext() == null) return;
+        android.content.Context appContext = requireContext().getApplicationContext();
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete Block")
                 .setMessage("Are you sure you want to delete " + block.getName() + "?")
@@ -69,11 +96,15 @@ public class BlocksFragment extends Fragment implements BlockAdapter.OnBlockActi
 
                         // Re-register remaining geofences
                         List<BlockEntity> enabledBlocks = database.blockDao().getEnabledBlocksSync();
-                        GeofenceManager geofenceManager = new GeofenceManager(requireContext().getApplicationContext());
+                        GeofenceManager geofenceManager = new GeofenceManager(appContext);
                         geofenceManager.registerGeofences(enabledBlocks);
 
                         if (getActivity() != null) {
-                            getActivity().runOnUiThread(() -> Toast.makeText(requireContext(), "Block deleted.", Toast.LENGTH_SHORT).show());
+                            getActivity().runOnUiThread(() -> {
+                                if (isAdded() && getContext() != null) {
+                                    Toast.makeText(requireContext(), "Block deleted.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                     });
                 })
@@ -83,12 +114,14 @@ public class BlocksFragment extends Fragment implements BlockAdapter.OnBlockActi
 
     @Override
     public void onToggleEnable(BlockEntity block, boolean enabled) {
+        if (getContext() == null) return;
+        android.content.Context appContext = requireContext().getApplicationContext();
         AppDatabase.databaseWriteExecutor.execute(() -> {
             block.setEnabled(enabled);
             database.blockDao().update(block);
 
             List<BlockEntity> enabledBlocks = database.blockDao().getEnabledBlocksSync();
-            GeofenceManager geofenceManager = new GeofenceManager(requireContext().getApplicationContext());
+            GeofenceManager geofenceManager = new GeofenceManager(appContext);
             geofenceManager.registerGeofences(enabledBlocks);
         });
     }

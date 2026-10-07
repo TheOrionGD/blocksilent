@@ -32,6 +32,12 @@ public class BatteryOptimizationFragment extends Fragment {
         btnBatterySettings = view.findViewById(R.id.btnDisableBatteryOptimization);
         btnOpenAppSettings = view.findViewById(R.id.btnOpenAppSettings);
 
+        view.findViewById(R.id.btnBatteryBack).setOnClickListener(v -> {
+            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                getParentFragmentManager().popBackStack();
+            }
+        });
+
         btnBatterySettings.setOnClickListener(v -> {
             if (isAdded() && getContext() != null) {
                 BatteryOptimizationHelper.requestIgnoreBatteryOptimization(requireContext());

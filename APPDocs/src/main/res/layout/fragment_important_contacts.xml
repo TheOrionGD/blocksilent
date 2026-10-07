@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light">
+    android:background="@color/background_light"
+    android:orientation="vertical">
 
+    <!-- Header -->
     <LinearLayout
         android:id="@+id/layoutContactHeader"
         android:layout_width="match_parent"
@@ -15,16 +17,16 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Important Contacts"
+            android:text="Important VIP Contacts"
             android:textColor="@color/primary"
-            android:textSize="24sp"
+            android:textSize="22sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Calls from these contacts can be allowed during silent mode via Android DND Priority settings."
+            android:text="Calls and priority messages from these verified contacts will bypass silent automation."
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
 
@@ -41,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
-                android:text="+ Add Contact" />
+                android:text="+ Add VIP Contact" />
 
             <Button
                 android:id="@+id/btnOpenDndPrioritySettings"
@@ -54,12 +56,48 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Empty State -->
+    <LinearLayout
+        android:id="@+id/layoutEmptyContacts"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_phone"
+            app:tint="@color/text_secondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="No VIP Contacts Added"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text="Add parents, guardians, or supervisors who need to reach you urgently even when your phone is silenced in class."
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Contacts RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvImportantContacts"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/layoutContactHeader"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
-        android:layoutAnimation="@anim/layout_animation_fall_down"
         android:paddingBottom="24dp" />
-</RelativeLayout>
+</LinearLayout>

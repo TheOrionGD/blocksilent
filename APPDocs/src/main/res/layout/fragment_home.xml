@@ -53,7 +53,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="True Background Geofencing"
+                            android:text="Intelligent Context-Aware Sound Automation"
                             android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
                     </LinearLayout>
@@ -99,9 +99,9 @@
                             android:id="@+id/tvCurrentLocation"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Outside Configured Area"
+                            android:text="Outside Campus Zones"
                             android:textColor="@color/text_primary"
-                            android:textSize="15sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -109,7 +109,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Active Rule: Normal Sound"
+                            android:text="Active Source: GPS + Wi-Fi • Normal Profile"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -122,6 +122,70 @@
                         android:text="NORMAL"
                         android:textColor="@color/status_active"
                         android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Multi-Signal Context Badges Grid -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvBadgeGps"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:background="#154CAF50"
+                        android:gravity="center"
+                        android:paddingVertical="6dp"
+                        android:text="📍 GPS: Active"
+                        android:textColor="#4CAF50"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvBadgeWifi"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="2dp"
+                        android:layout_weight="1"
+                        android:background="#152196F3"
+                        android:gravity="center"
+                        android:paddingVertical="6dp"
+                        android:text="📡 Wi-Fi: Standby"
+                        android:textColor="#2196F3"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvBadgeSensor"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="2dp"
+                        android:layout_weight="1"
+                        android:background="#159C27B0"
+                        android:gravity="center"
+                        android:paddingVertical="6dp"
+                        android:text="🔄 Flip: Ready"
+                        android:textColor="#9C27B0"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvBadgeNoise"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:background="#15FF9800"
+                        android:gravity="center"
+                        android:paddingVertical="6dp"
+                        android:text="🎙️ 38 dB"
+                        android:textColor="#FF9800"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -138,7 +202,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Geofencing: Ready"
+                        android:text="Context Engine: Operational"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 
@@ -156,7 +220,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Warning Alert Card: Missing Background Location -->
+        <!-- Warning Alert Cards -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardBackgroundLocationWarning"
             android:layout_width="match_parent"
@@ -203,7 +267,6 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Warning Alert Card: Missing DND Access -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardDndWarning"
             android:layout_width="match_parent"
@@ -330,13 +393,13 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
-        <!-- Quick Actions Row -->
+        <!-- Quick Feature Hub -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"
-            android:text="Quick Actions"
+            android:text="Context &amp; Sound Modules"
             android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -344,6 +407,60 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnQuickWifiSurvey"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:text="📡 Wi-Fi Survey"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnQuickSensors"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="🔄 Flip Sensors"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnQuickEmergency"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:text="🚨 VIP Emergency"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnQuickNoise"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="🎙️ Noise Monitor"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
             android:orientation="horizontal">
 
             <Button
@@ -390,7 +507,7 @@
                 android:text="Activity Log" />
         </LinearLayout>
 
-        <!-- Live Geofence Simulation / Demo Section -->
+        <!-- Live Multi-Signal Simulation / Demo Section -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -410,7 +527,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Geofence Simulation &amp; Testing"
+                    android:text="Interactive Context Simulator"
                     android:textColor="@color/primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -419,7 +536,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Simulates ENTER/EXIT events through the exact background Rule Engine &amp; Sound Manager."
+                    android:text="Simulates GPS, Wi-Fi BSSID, Flip-to-Silence, and Emergency Break-Glass through the unified Context Engine."
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
 
@@ -444,7 +561,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Simulate ENTER" />
+                        android:text="GPS ENTER"
+                        android:textSize="12sp" />
 
                     <Button
                         android:id="@+id/btnDemoExitLocation"
@@ -453,8 +571,37 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Simulate EXIT" />
+                        android:text="GPS EXIT"
+                        android:textSize="12sp" />
                 </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnDemoSimulateWifi"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="Simulate Wi-Fi AP"
+                        android:textSize="12sp" />
+
+                    <Button
+                        android:id="@+id/btnDemoSimulateFlip"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Simulate Flip-Down"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

@@ -49,6 +49,7 @@ public class SplashActivity extends AppCompatActivity {
             boolean isFirstTime = (settings == null || settings.isFirstTimeLaunch());
 
             runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
                 Intent intent;
                 if (isFirstTime) {
                     intent = new Intent(SplashActivity.this, OnboardingActivity.class);

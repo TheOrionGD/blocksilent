@@ -1,6 +1,7 @@
 package com.blocksilent.app.fragments;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -20,6 +21,7 @@ import androidx.fragment.app.Fragment;
 import com.blocksilent.app.R;
 import com.blocksilent.app.activities.AddEditBlockActivity;
 import com.blocksilent.app.activities.MainActivity;
+import com.blocksilent.app.context.ContextEngine;
 import com.blocksilent.app.database.AppDatabase;
 import com.blocksilent.app.database.entities.ActiveGeofenceStateEntity;
 import com.blocksilent.app.database.entities.BlockEntity;
@@ -35,41 +37,54 @@ import com.google.android.material.card.MaterialCardView;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class HomeFragment extends Fragment {
 
     private TextView tvCurrentLocation, tvCurrentSoundMode, tvAutomationStatus, tvGpsStatus, tvActiveRule;
+    private TextView tvBadgeGps, tvBadgeWifi, tvBadgeSensor, tvBadgeNoise;
     private TextView tvConfiguredBlocksCount, tvTodayChangesCount;
     private MaterialCardView cardBackgroundLocationWarning, cardDndWarning;
     private Button btnFixBackgroundLocation, btnFixDndAccess, btnViewDiagnostics;
+    private Button btnQuickWifiSurvey, btnQuickSensors, btnQuickEmergency, btnQuickNoise;
     private Button btnAddBlock, btnViewBlocks, btnTimetable, btnHistory, btnEmergencyOverride;
     private Spinner spinnerDemoBlocks;
-    private Button btnDemoEnterSelected, btnDemoExitLocation;
+    private Button btnDemoEnterSelected, btnDemoExitLocation, btnDemoSimulateWifi, btnDemoSimulateFlip;
 
     private SoundModeManager soundModeManager;
     private DemoModeManager demoModeManager;
     private GeofenceManager geofenceManager;
+    private ContextEngine contextEngine;
     private AppDatabase database;
 
     private final List<BlockEntity> currentBlockList = new ArrayList<>();
     private final List<String> currentBlockNames = new ArrayList<>();
     private ArrayAdapter<String> demoSpinnerAdapter;
 
+    private boolean demoFlipState = false;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        soundModeManager = new SoundModeManager(requireContext());
-        demoModeManager = new DemoModeManager(requireContext());
-        geofenceManager = new GeofenceManager(requireContext());
-        database = AppDatabase.getInstance(requireContext().getApplicationContext());
+        Context ctx = requireContext();
+        soundModeManager = new SoundModeManager(ctx);
+        demoModeManager = new DemoModeManager(ctx);
+        geofenceManager = new GeofenceManager(ctx);
+        contextEngine = ContextEngine.getInstance(ctx);
+        database = AppDatabase.getInstance(ctx.getApplicationContext());
 
         tvCurrentLocation = view.findViewById(R.id.tvCurrentLocation);
         tvCurrentSoundMode = view.findViewById(R.id.tvCurrentSoundMode);
         tvAutomationStatus = view.findViewById(R.id.tvAutomationStatus);
         tvGpsStatus = view.findViewById(R.id.tvGpsStatus);
         tvActiveRule = view.findViewById(R.id.tvActiveRule);
+
+        tvBadgeGps = view.findViewById(R.id.tvBadgeGps);
+        tvBadgeWifi = view.findViewById(R.id.tvBadgeWifi);
+        tvBadgeSensor = view.findViewById(R.id.tvBadgeSensor);
+        tvBadgeNoise = view.findViewById(R.id.tvBadgeNoise);
 
         tvConfiguredBlocksCount = view.findViewById(R.id.tvConfiguredBlocksCount);
         tvTodayChangesCount = view.findViewById(R.id.tvTodayChangesCount);
@@ -80,6 +95,11 @@ public class HomeFragment extends Fragment {
         btnFixDndAccess = view.findViewById(R.id.btnFixDndAccess);
         btnViewDiagnostics = view.findViewById(R.id.btnViewDiagnostics);
 
+        btnQuickWifiSurvey = view.findViewById(R.id.btnQuickWifiSurvey);
+        btnQuickSensors = view.findViewById(R.id.btnQuickSensors);
+        btnQuickEmergency = view.findViewById(R.id.btnQuickEmergency);
+        btnQuickNoise = view.findViewById(R.id.btnQuickNoise);
+
         btnAddBlock = view.findViewById(R.id.btnQuickAddBlock);
         btnViewBlocks = view.findViewById(R.id.btnQuickViewBlocks);
         btnTimetable = view.findViewById(R.id.btnQuickTimetable);
@@ -89,6 +109,8 @@ public class HomeFragment extends Fragment {
         spinnerDemoBlocks = view.findViewById(R.id.spinnerDemoBlocks);
         btnDemoEnterSelected = view.findViewById(R.id.btnDemoEnterSelected);
         btnDemoExitLocation = view.findViewById(R.id.btnDemoExitLocation);
+        btnDemoSimulateWifi = view.findViewById(R.id.btnDemoSimulateWifi);
+        btnDemoSimulateFlip = view.findViewById(R.id.btnDemoSimulateFlip);
 
         demoSpinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, currentBlockNames);
         spinnerDemoBlocks.setAdapter(demoSpinnerAdapter);
@@ -96,6 +118,7 @@ public class HomeFragment extends Fragment {
         setupQuickActions();
         setupDataDrivenDemo();
         observeDatabaseEntities();
+        observeContextEngine();
 
         return view;
     }
@@ -104,6 +127,33 @@ public class HomeFragment extends Fragment {
     public void onResume() {
         super.onResume();
         updateDashboardData();
+    }
+
+    private void observeContextEngine() {
+        contextEngine.getLiveContextState().observe(getViewLifecycleOwner(), state -> {
+            if (state == null || !isAdded()) return;
+
+            tvCurrentLocation.setText(state.getPrimaryLocationName());
+            tvActiveRule.setText("Source: " + state.getSource() + " • " + state.getReason());
+            tvCurrentSoundMode.setText(state.getRecommendedSoundMode());
+
+            if (SoundModeManager.MODE_SILENT.equalsIgnoreCase(state.getRecommendedSoundMode())) {
+                tvCurrentSoundMode.setBackgroundResource(R.drawable.bg_badge_silent);
+                tvCurrentSoundMode.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.mode_silent));
+            } else if (SoundModeManager.MODE_VIBRATE.equalsIgnoreCase(state.getRecommendedSoundMode())) {
+                tvCurrentSoundMode.setBackgroundResource(R.drawable.bg_badge_vibrate);
+                tvCurrentSoundMode.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.mode_vibrate));
+            } else {
+                tvCurrentSoundMode.setBackgroundResource(R.drawable.bg_badge_normal);
+                tvCurrentSoundMode.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.mode_normal));
+            }
+
+            // Badges
+            tvBadgeGps.setText(state.getActiveGeofences().isEmpty() ? "📍 GPS: Standby" : "📍 GPS: " + state.getActiveGeofences().get(0).getName());
+            tvBadgeWifi.setText(state.getActiveWifiZone() == null ? "📡 Wi-Fi: Standby" : "📡 " + state.getActiveWifiZone().getRoomName());
+            tvBadgeSensor.setText(state.isFaceDownSilenced() ? "🔄 Flip: Muted" : "🔄 Flip: Neutral");
+            tvBadgeNoise.setText(String.format(Locale.getDefault(), "🎙️ %.0f dB", state.getApproximateNoiseDb()));
+        });
     }
 
     private void observeDatabaseEntities() {
@@ -122,18 +172,6 @@ public class HomeFragment extends Fragment {
             demoSpinnerAdapter.notifyDataSetChanged();
             updateDashboardData();
         });
-
-        database.activeGeofenceStateDao().getInsideStates().observe(getViewLifecycleOwner(), insideStates -> {
-            if (insideStates != null && !insideStates.isEmpty()) {
-                ActiveGeofenceStateEntity active = insideStates.get(0);
-                tvCurrentLocation.setText("Inside " + active.getBlockName());
-                tvActiveRule.setText("Active: " + active.getBlockName() + " → " + active.getAppliedSoundMode());
-            } else {
-                tvCurrentLocation.setText("Outside Configured Area");
-                tvActiveRule.setText("Active Rule: Normal Sound");
-            }
-            updateDashboardData();
-        });
     }
 
     private void updateDashboardData() {
@@ -141,13 +179,10 @@ public class HomeFragment extends Fragment {
         boolean hasBgLoc = PermissionManager.hasBackgroundLocationPermission(requireContext());
         boolean isGpsOn = PermissionManager.isLocationServicesEnabled(requireContext());
         boolean hasDnd = PermissionManager.hasDndPermission(requireContext());
-        boolean isBattIgnored = BatteryOptimizationHelper.isBatteryOptimizationIgnored(requireContext());
 
-        // Update Warning Banners
         cardBackgroundLocationWarning.setVisibility(!hasBgLoc ? View.VISIBLE : View.GONE);
         cardDndWarning.setVisibility(!hasDnd ? View.VISIBLE : View.GONE);
 
-        // Automation Status Pill
         boolean isReady = hasLoc && hasBgLoc && isGpsOn;
         if (isReady) {
             tvAutomationStatus.setText("● ACTIVE");
@@ -160,20 +195,7 @@ public class HomeFragment extends Fragment {
         }
 
         int registeredCount = geofenceManager.getRegisteredGeofencesCount();
-        tvGpsStatus.setText("Geofencing: " + (isReady ? (registeredCount + " Active") : "Unavailable"));
-
-        String currentSound = soundModeManager.getCurrentRingerMode();
-        tvCurrentSoundMode.setText(currentSound);
-        if (SoundModeManager.MODE_SILENT.equalsIgnoreCase(currentSound)) {
-            tvCurrentSoundMode.setBackgroundResource(R.drawable.bg_badge_silent);
-            tvCurrentSoundMode.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.mode_silent));
-        } else if (SoundModeManager.MODE_VIBRATE.equalsIgnoreCase(currentSound)) {
-            tvCurrentSoundMode.setBackgroundResource(R.drawable.bg_badge_vibrate);
-            tvCurrentSoundMode.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.mode_vibrate));
-        } else {
-            tvCurrentSoundMode.setBackgroundResource(R.drawable.bg_badge_normal);
-            tvCurrentSoundMode.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.mode_normal));
-        }
+        tvGpsStatus.setText("Geofencing: " + (isReady ? (registeredCount + " Active Zones") : "Unavailable"));
 
         AppDatabase.databaseWriteExecutor.execute(() -> {
             int enabledCount = database.blockDao().getEnabledBlocksCountSync();
@@ -186,8 +208,10 @@ public class HomeFragment extends Fragment {
 
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    tvConfiguredBlocksCount.setText(String.valueOf(enabledCount));
-                    tvTodayChangesCount.setText(String.valueOf(todayChanges));
+                    if (isAdded()) {
+                        tvConfiguredBlocksCount.setText(String.valueOf(enabledCount));
+                        tvTodayChangesCount.setText(String.valueOf(todayChanges));
+                    }
                 });
             }
         });
@@ -204,7 +228,35 @@ public class HomeFragment extends Fragment {
 
         btnFixDndAccess.setOnClickListener(v -> PermissionManager.openDndSettings(requireContext()));
 
-        btnViewDiagnostics.setOnClickListener(v -> showDiagnosticsDialog());
+        btnViewDiagnostics.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).loadFragment(new DiagnosticsFragment());
+            }
+        });
+
+        btnQuickWifiSurvey.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).loadFragment(new WifiSurveyFragment());
+            }
+        });
+
+        btnQuickSensors.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).loadFragment(new SensorSettingsFragment());
+            }
+        });
+
+        btnQuickEmergency.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).loadFragment(new EmergencySettingsFragment());
+            }
+        });
+
+        btnQuickNoise.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).loadFragment(new NoiseDetectionFragment());
+            }
+        });
 
         btnAddBlock.setOnClickListener(v -> startActivity(new Intent(requireContext(), AddEditBlockActivity.class)));
 
@@ -239,117 +291,41 @@ public class HomeFragment extends Fragment {
             if (selectedPos >= 0 && selectedPos < currentBlockList.size()) {
                 BlockEntity selectedBlock = currentBlockList.get(selectedPos);
                 demoModeManager.simulateEnterBlock(selectedBlock.getId());
-                Toast.makeText(requireContext(), "Simulating ENTER: " + selectedBlock.getName(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Simulating GPS ENTER: " + selectedBlock.getName(), Toast.LENGTH_SHORT).show();
                 v.postDelayed(this::updateDashboardData, 600);
             }
         });
 
         btnDemoExitLocation.setOnClickListener(v -> {
             demoModeManager.simulateExitBlock();
-            Toast.makeText(requireContext(), "Simulating EXIT: Outside Configured Area", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Simulating GPS EXIT: Outside Campus", Toast.LENGTH_SHORT).show();
             v.postDelayed(this::updateDashboardData, 600);
         });
-    }
 
-    private void showDiagnosticsDialog() {
-        View diagView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_diagnostics, null);
-
-        TextView diagLocationPerm = diagView.findViewById(R.id.diagLocationPerm);
-        TextView diagBackgroundPerm = diagView.findViewById(R.id.diagBackgroundPerm);
-        TextView diagLocationServices = diagView.findViewById(R.id.diagLocationServices);
-        TextView diagGeofenceReg = diagView.findViewById(R.id.diagGeofenceReg);
-        TextView diagAutomationState = diagView.findViewById(R.id.diagAutomationState);
-        TextView diagEmergencyOverride = diagView.findViewById(R.id.diagEmergencyOverride);
-        TextView diagDndPolicy = diagView.findViewById(R.id.diagDndPolicy);
-        TextView diagBatteryOpt = diagView.findViewById(R.id.diagBatteryOpt);
-        TextView diagLastEvent = diagView.findViewById(R.id.diagLastEvent);
-
-        Button btnDiagReRegister = diagView.findViewById(R.id.btnDiagReRegister);
-        Button btnDiagOpenBattery = diagView.findViewById(R.id.btnDiagOpenBattery);
-        Button btnDiagOpenDnd = diagView.findViewById(R.id.btnDiagOpenDnd);
-        Button btnDiagClose = diagView.findViewById(R.id.btnDiagClose);
-
-        boolean loc = PermissionManager.hasLocationPermission(requireContext());
-        boolean bgLoc = PermissionManager.hasBackgroundLocationPermission(requireContext());
-        boolean gps = PermissionManager.isLocationServicesEnabled(requireContext());
-        boolean dnd = PermissionManager.hasDndPermission(requireContext());
-        boolean batt = BatteryOptimizationHelper.isBatteryOptimizationIgnored(requireContext());
-        int regCount = geofenceManager.getRegisteredGeofencesCount();
-        String regStatus = geofenceManager.getRegistrationStatus();
-
-        int activeColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_active);
-        int inactiveColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_inactive);
-
-        diagLocationPerm.setText("Location Permission: " + (loc ? "✓ GRANTED" : "✗ DENIED"));
-        diagLocationPerm.setTextColor(loc ? activeColor : inactiveColor);
-
-        diagBackgroundPerm.setText("Background Location: " + (bgLoc ? "✓ GRANTED (Allow all the time)" : "✗ NOT GRANTED"));
-        diagBackgroundPerm.setTextColor(bgLoc ? activeColor : inactiveColor);
-
-        diagLocationServices.setText("Location Services (GPS): " + (gps ? "✓ ON" : "✗ OFF"));
-        diagLocationServices.setTextColor(gps ? activeColor : inactiveColor);
-
-        diagGeofenceReg.setText("Geofencing Registration: " + regStatus + " (" + regCount + " registered)");
-        diagDndPolicy.setText("Sound / DND Policy Access: " + (dnd ? "✓ GRANTED" : "⚠️ NOT GRANTED"));
-        diagBatteryOpt.setText("Battery Optimization: " + (batt ? "✓ UNRESTRICTED" : "⚠️ RESTRICTED"));
-
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            SettingsEntity settings = database.settingsDao().getSettingsSync();
-            boolean autoEnabled = settings != null && settings.isAutomationEnabled();
-            boolean overrideActive = settings != null && settings.getOverrideUntilTimestamp() > System.currentTimeMillis();
-            List<HistoryEntity> recentHistory = database.historyDao().getRecentHistorySync(1);
-
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    diagAutomationState.setText("Automation Switch: " + (autoEnabled ? "✓ ON" : "OFF"));
-                    diagEmergencyOverride.setText("Emergency Override: " + (overrideActive ? "⚠️ ACTIVE" : "OFF"));
-
-                    if (recentHistory != null && !recentHistory.isEmpty()) {
-                        HistoryEntity h = recentHistory.get(0);
-                        diagLastEvent.setText("Last Event: " + h.getEventType() + " (" + h.getFormattedDateTime() + ") -> " + h.getNewMode());
-                    } else {
-                        diagLastEvent.setText("Last Event: None recorded yet");
-                    }
-                });
-            }
+        btnDemoSimulateWifi.setOnClickListener(v -> {
+            demoModeManager.simulateWifiRoomDetection("CSE Lab 3", "AA:BB:CC:DD:EE:01", "SILENT");
+            Toast.makeText(requireContext(), "Simulating Wi-Fi AP: CSE Lab 3 (Silent)", Toast.LENGTH_SHORT).show();
         });
 
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setView(diagView)
-                .create();
-
-        btnDiagReRegister.setOnClickListener(v -> {
-            geofenceManager.reRegisterAllGeofences();
-            Toast.makeText(requireContext(), "Re-registering all enabled geofences...", Toast.LENGTH_SHORT).show();
-            dialog.dismiss();
-            updateDashboardData();
+        btnDemoSimulateFlip.setOnClickListener(v -> {
+            demoFlipState = !demoFlipState;
+            demoModeManager.simulateFlipToSilence(demoFlipState);
+            btnDemoSimulateFlip.setText(demoFlipState ? "Simulate Pickup" : "Simulate Flip-Down");
+            Toast.makeText(requireContext(), demoFlipState ? "Simulating Phone Flipped Face-Down" : "Simulating Phone Picked Up", Toast.LENGTH_SHORT).show();
         });
-
-        btnDiagOpenBattery.setOnClickListener(v -> {
-            BatteryOptimizationHelper.openBatteryOptimizationSettings(requireContext());
-            dialog.dismiss();
-        });
-
-        btnDiagOpenDnd.setOnClickListener(v -> {
-            PermissionManager.openDndSettings(requireContext());
-            dialog.dismiss();
-        });
-
-        btnDiagClose.setOnClickListener(v -> dialog.dismiss());
-
-        dialog.show();
     }
 
     private void showEmergencyOverrideDialog() {
         String[] options = {"Disable for 1 Hour", "Disable for 2 Hours", "Disable for 4 Hours", "Cancel Override (Resume Automation)"};
         new AlertDialog.Builder(requireContext())
-                .setTitle("Emergency Override")
+                .setTitle("Manual Emergency Override")
                 .setItems(options, (dialog, which) -> {
-                    long durationMs = 0;
-                    if (which == 0) durationMs = 3600000;
-                    else if (which == 1) durationMs = 7200000;
-                    else if (which == 2) durationMs = 14400000;
+                    long duration = 0;
+                    if (which == 0) duration = 3600000;
+                    else if (which == 1) duration = 7200000;
+                    else if (which == 2) duration = 14400000;
 
+                    final long durationMs = duration;
                     final long overrideTime = durationMs > 0 ? (System.currentTimeMillis() + durationMs) : 0;
 
                     AppDatabase.databaseWriteExecutor.execute(() -> {
@@ -358,15 +334,18 @@ public class HomeFragment extends Fragment {
                             settings.setOverrideUntilTimestamp(overrideTime);
                             database.settingsDao().insertOrUpdate(settings);
                         }
+                        contextEngine.evaluateAndApplyContext(durationMs > 0 ? "MANUAL_OVERRIDE" : "RESUME_AUTOMATION");
 
                         if (getActivity() != null) {
                             getActivity().runOnUiThread(() -> {
-                                if (overrideTime > 0) {
-                                    Toast.makeText(requireContext(), "Emergency Override activated!", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(requireContext(), "Emergency Override cancelled. Automation active.", Toast.LENGTH_SHORT).show();
+                                if (isAdded() && getContext() != null) {
+                                    if (overrideTime > 0) {
+                                        Toast.makeText(requireContext(), "Manual Override activated!", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(requireContext(), "Manual Override cancelled. Automation active.", Toast.LENGTH_SHORT).show();
+                                    }
+                                    updateDashboardData();
                                 }
-                                updateDashboardData();
                             });
                         }
                     });

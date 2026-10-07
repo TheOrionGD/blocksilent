@@ -10,7 +10,9 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -25,6 +27,7 @@ import com.blocksilent.app.adapters.TimetableAdapter;
 import com.blocksilent.app.database.AppDatabase;
 import com.blocksilent.app.database.entities.BlockEntity;
 import com.blocksilent.app.database.entities.TimetableEntity;
+import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -35,8 +38,14 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
 
     private RecyclerView rvTimetable;
     private Button btnAddTimetable;
+    private TextView tvTimetableCount;
+    private LinearLayout layoutEmptyTimetable;
+    private ChipGroup chipGroupDayFilter;
+
     private TimetableAdapter adapter;
     private AppDatabase database;
+    private List<TimetableEntity> allTimetables = new ArrayList<>();
+    private String selectedDayFilter = "ALL";
 
     @Nullable
     @Override
@@ -45,17 +54,23 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
 
         rvTimetable = view.findViewById(R.id.rvTimetable);
         btnAddTimetable = view.findViewById(R.id.btnAddTimetable);
+        tvTimetableCount = view.findViewById(R.id.tvTimetableCount);
+        layoutEmptyTimetable = view.findViewById(R.id.layoutEmptyTimetable);
+        chipGroupDayFilter = view.findViewById(R.id.chipGroupDayFilter);
 
         rvTimetable.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new TimetableAdapter(requireContext(), this);
         rvTimetable.setAdapter(adapter);
+
+        setupDayFilters();
 
         Context ctx = getContext();
         if (ctx != null) {
             database = AppDatabase.getInstance(ctx.getApplicationContext());
             database.timetableDao().getAllTimetables().observe(getViewLifecycleOwner(), timetables -> {
                 if (isAdded()) {
-                    adapter.setTimetables(timetables);
+                    allTimetables = timetables != null ? timetables : new ArrayList<>();
+                    applyFilter();
                 }
             });
         }
@@ -63,6 +78,53 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
         btnAddTimetable.setOnClickListener(v -> showAddTimetableDialog());
 
         return view;
+    }
+
+    private void setupDayFilters() {
+        chipGroupDayFilter.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) return;
+            int id = checkedIds.get(0);
+            if (id == R.id.chipDayAll) {
+                selectedDayFilter = "ALL";
+            } else if (id == R.id.chipDayMon) {
+                selectedDayFilter = "Monday";
+            } else if (id == R.id.chipDayTue) {
+                selectedDayFilter = "Tuesday";
+            } else if (id == R.id.chipDayWed) {
+                selectedDayFilter = "Wednesday";
+            } else if (id == R.id.chipDayThu) {
+                selectedDayFilter = "Thursday";
+            } else if (id == R.id.chipDayFri) {
+                selectedDayFilter = "Friday";
+            } else if (id == R.id.chipDaySat) {
+                selectedDayFilter = "Saturday";
+            } else if (id == R.id.chipDaySun) {
+                selectedDayFilter = "Sunday";
+            }
+            applyFilter();
+        });
+    }
+
+    private void applyFilter() {
+        List<TimetableEntity> filtered = new ArrayList<>();
+        for (TimetableEntity t : allTimetables) {
+            if ("ALL".equals(selectedDayFilter)) {
+                filtered.add(t);
+            } else if (selectedDayFilter.equalsIgnoreCase(t.getDayOfWeek())) {
+                filtered.add(t);
+            }
+        }
+
+        adapter.setTimetables(filtered);
+        tvTimetableCount.setText(filtered.size() + " classes shown (" + allTimetables.size() + " total)");
+
+        if (filtered.isEmpty()) {
+            layoutEmptyTimetable.setVisibility(View.VISIBLE);
+            rvTimetable.setVisibility(View.GONE);
+        } else {
+            layoutEmptyTimetable.setVisibility(View.GONE);
+            rvTimetable.setVisibility(View.VISIBLE);
+        }
     }
 
     private void showAddTimetableDialog() {

@@ -3,12 +3,13 @@ package com.blocksilent.app.activities;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.blocksilent.app.R;
 import com.blocksilent.app.database.AppDatabase;
-import com.blocksilent.app.database.entities.BlockEntity;
 import com.blocksilent.app.database.entities.SettingsEntity;
 import com.blocksilent.app.fragments.BlocksFragment;
 import com.blocksilent.app.fragments.HistoryFragment;
@@ -17,8 +18,6 @@ import com.blocksilent.app.fragments.SettingsFragment;
 import com.blocksilent.app.fragments.TimetableFragment;
 import com.blocksilent.app.geofence.GeofenceManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,27 +52,40 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
-                loadFragment(new HomeFragment());
+                loadFragment(new HomeFragment(), false);
                 return true;
             } else if (itemId == R.id.nav_blocks) {
-                loadFragment(new BlocksFragment());
+                loadFragment(new BlocksFragment(), false);
                 return true;
             } else if (itemId == R.id.nav_timetable) {
-                loadFragment(new TimetableFragment());
+                loadFragment(new TimetableFragment(), false);
                 return true;
             } else if (itemId == R.id.nav_history) {
-                loadFragment(new HistoryFragment());
+                loadFragment(new HistoryFragment(), false);
                 return true;
             } else if (itemId == R.id.nav_settings) {
-                loadFragment(new SettingsFragment());
+                loadFragment(new SettingsFragment(), false);
                 return true;
             }
             return false;
         });
 
+        // Handle back press to pop child fragments
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    getSupportFragmentManager().popBackStack();
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
+
         // Default tab: Home
         if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
+            loadFragment(new HomeFragment(), false);
         }
     }
 
@@ -92,9 +104,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-                .replace(R.id.fragmentContainer, fragment)
-                .commit();
+        loadFragment(fragment, true);
+    }
+
+    public void loadFragment(Fragment fragment, boolean addToBackStack) {
+        if (isFinishing() || isDestroyed()) return;
+        var tx = getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                .replace(R.id.fragmentContainer, fragment);
+        if (addToBackStack) {
+            tx.addToBackStack(null);
+        } else {
+            getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
+        tx.commitAllowingStateLoss();
     }
 }

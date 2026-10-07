@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -27,6 +28,7 @@ public class ImportantContactsFragment extends Fragment implements ContactAdapte
 
     private RecyclerView rvContacts;
     private Button btnAddContact, btnDndSettings;
+    private LinearLayout layoutEmptyContacts;
     private ContactAdapter adapter;
     private AppDatabase database;
 
@@ -38,6 +40,7 @@ public class ImportantContactsFragment extends Fragment implements ContactAdapte
         rvContacts = view.findViewById(R.id.rvImportantContacts);
         btnAddContact = view.findViewById(R.id.btnAddContact);
         btnDndSettings = view.findViewById(R.id.btnOpenDndPrioritySettings);
+        layoutEmptyContacts = view.findViewById(R.id.layoutEmptyContacts);
 
         rvContacts.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new ContactAdapter(requireContext(), this);
@@ -49,6 +52,13 @@ public class ImportantContactsFragment extends Fragment implements ContactAdapte
             database.contactDao().getAllContacts().observe(getViewLifecycleOwner(), contacts -> {
                 if (isAdded()) {
                     adapter.setContacts(contacts);
+                    if (contacts == null || contacts.isEmpty()) {
+                        layoutEmptyContacts.setVisibility(View.VISIBLE);
+                        rvContacts.setVisibility(View.GONE);
+                    } else {
+                        layoutEmptyContacts.setVisibility(View.GONE);
+                        rvContacts.setVisibility(View.VISIBLE);
+                    }
                 }
             });
         }
@@ -71,9 +81,9 @@ public class ImportantContactsFragment extends Fragment implements ContactAdapte
         EditText etPhone = view.findViewById(R.id.etContactPhone);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("Add Important Contact")
+                .setTitle("Add VIP Contact")
                 .setView(view)
-                .setPositiveButton("Add", (dialog, which) -> {
+                .setPositiveButton("Save Contact", (dialog, which) -> {
                     if (!isAdded() || getContext() == null) return;
                     String name = etName.getText() != null ? etName.getText().toString().trim() : "";
                     String phone = etPhone.getText() != null ? etPhone.getText().toString().trim() : "";

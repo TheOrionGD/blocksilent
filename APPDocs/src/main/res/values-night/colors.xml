@@ -22,6 +22,8 @@
     <color name="status_active">#34D399</color>
     <color name="status_inactive">#F87171</color>
     <color name="status_warning">#FBBF24</color>
+    <color name="status_silent">#A78BFA</color>
+    <color name="status_vibrate">#22D3EE</color>
 
     <!-- Sound Modes -->
     <color name="mode_silent">#A78BFA</color>
