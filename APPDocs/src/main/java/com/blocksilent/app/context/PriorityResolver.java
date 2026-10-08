@@ -2,7 +2,6 @@ package com.blocksilent.app.context;
 
 import com.blocksilent.app.database.entities.BlockEntity;
 import com.blocksilent.app.database.entities.TimetableEntity;
-import com.blocksilent.app.database.entities.WifiZoneEntity;
 import com.blocksilent.app.utils.SoundModeManager;
 
 import java.util.List;
@@ -29,21 +28,17 @@ public class PriorityResolver {
     }
 
     /**
-     * Resolves the definitive sound policy by arbitrating across all active contextual inputs:
+     * Resolves the definitive sound policy across active contextual inputs:
      * 1. Emergency Break-Glass (Priority 100) -> NORMAL
      * 2. Manual Temporary Override (Priority 90) -> NORMAL
-     * 3. Sensor Flip-to-Silence (Priority 80) -> SILENT
-     * 4. Active Timetable Slot (Priority 70) -> Scheduled sound mode
-     * 5. Indoor Wi-Fi BSSID Room Mapping (Priority 60) -> Wi-Fi Room policy
-     * 6. GPS Geofence (Priority 50 - Exam Hall > Classroom > Lab > Library > Office > Custom)
-     * 7. Default Outside All (Priority 10) -> NORMAL / Auto-Restore
+     * 3. Active Timetable Slot (Priority 70) -> Scheduled sound mode
+     * 4. Real-Time GPS Geofence (Priority 50 - Exam Hall > Classroom > Lab > Library > Office > Custom)
+     * 5. Default Outside All (Priority 10) -> NORMAL / Auto-Restore
      */
     public static ResolutionResult resolve(
             boolean isEmergencyActive,
             boolean isManualOverrideActive,
-            boolean isFaceDownSilenced,
             TimetableEntity activeSchedule,
-            WifiZoneEntity activeWifiZone,
             List<BlockEntity> activeBlocks) {
 
         // 1. Emergency Break-Glass
@@ -70,19 +65,7 @@ public class PriorityResolver {
             );
         }
 
-        // 3. Sensor Flip-to-Silence
-        if (isFaceDownSilenced) {
-            return new ResolutionResult(
-                    SoundModeManager.MODE_SILENT,
-                    "SENSOR_FLIP",
-                    "Face-Down Position",
-                    "Phone flipped face-down on table (Instant Flip-to-Silence).",
-                    "HIGH",
-                    80
-            );
-        }
-
-        // 4. Timetable Scheduled Slot
+        // 3. Timetable Scheduled Slot
         if (activeSchedule != null && activeSchedule.isEnabled()) {
             return new ResolutionResult(
                     activeSchedule.getSoundMode(),
@@ -94,23 +77,7 @@ public class PriorityResolver {
             );
         }
 
-        // 5. Indoor Wi-Fi BSSID Room Mapping
-        if (activeWifiZone != null && activeWifiZone.isEnabled()) {
-            String policy = activeWifiZone.getSoundPolicy();
-            if (policy == null || policy.isEmpty() || "DEFAULT".equalsIgnoreCase(policy)) {
-                policy = SoundModeManager.MODE_SILENT;
-            }
-            return new ResolutionResult(
-                    policy,
-                    "WIFI_BSSID",
-                    activeWifiZone.getRoomName() + " (Floor " + activeWifiZone.getFloor() + ")",
-                    "Indoor micro-location matched AP [" + activeWifiZone.getBssid() + "]",
-                    "HIGH",
-                    60
-            );
-        }
-
-        // 6. GPS Geofencing (Find highest priority block among overlapping active blocks)
+        // 4. GPS Geofencing (Find highest priority block among overlapping active blocks)
         if (activeBlocks != null && !activeBlocks.isEmpty()) {
             BlockEntity dominantBlock = activeBlocks.get(0);
             for (BlockEntity b : activeBlocks) {
@@ -123,13 +90,13 @@ public class PriorityResolver {
                     dominantBlock.getSoundMode(),
                     "GPS_GEOFENCE",
                     dominantBlock.getName(),
-                    "Inside geofence boundary of " + dominantBlock.getName() + " (Priority " + dominantBlock.getPriority() + ")",
+                    "Inside geofence boundary of " + dominantBlock.getName(),
                     "HIGH",
                     50
             );
         }
 
-        // 7. Default Outside All Zones
+        // 5. Default Outside All Zones
         return new ResolutionResult(
                 SoundModeManager.MODE_NORMAL,
                 "AUTO_RESTORE",
@@ -140,3 +107,4 @@ public class PriorityResolver {
         );
     }
 }
+

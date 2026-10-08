@@ -124,6 +124,7 @@ public class LocationMonitoringService extends Service {
                 return;
             }
 
+            boolean wasPreviouslyInside = !insideBlockIds.isEmpty();
             Set<Long> currentlyInside = new HashSet<>();
 
             for (BlockEntity block : enabledBlocks) {
@@ -155,8 +156,8 @@ public class LocationMonitoringService extends Service {
                 ruleEngine.processBlockExit(exitedId);
             }
 
-            // If completely outside all blocks, ensure phone is unmuted
-            if (currentlyInside.isEmpty() && !insideBlockIds.isEmpty()) {
+            // If completely outside all blocks, ensure phone sound mode is restored
+            if (currentlyInside.isEmpty() && (wasPreviouslyInside || !exitedBlocks.isEmpty())) {
                 insideBlockIds.clear();
                 ruleEngine.processOutsideAllBlocks();
             }

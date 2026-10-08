@@ -162,10 +162,8 @@ public class RuleEngine {
 
     public void processOutsideAllBlocks() {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            List<ActiveGeofenceStateEntity> inside = database.activeGeofenceStateDao().getInsideStatesSync();
-            if (inside == null || inside.isEmpty()) {
-                contextEngine.evaluateAndApplyContext("OUTSIDE_ALL");
-            }
+            database.activeGeofenceStateDao().deleteAll();
+            contextEngine.evaluateAndApplyContext("OUTSIDE_ALL");
         });
     }
 }

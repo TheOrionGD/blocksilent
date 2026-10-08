@@ -269,6 +269,8 @@ public class AddEditBlockActivity extends AppCompatActivity {
             GeofenceManager geofenceManager = new GeofenceManager(getApplicationContext());
             geofenceManager.registerGeofences(enabledBlocks);
 
+            com.blocksilent.app.context.ContextEngine.getInstance(getApplicationContext()).evaluateAndApplyContext("BLOCK_SAVED");
+
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
                 Toast.makeText(this, "Block saved successfully!", Toast.LENGTH_SHORT).show();

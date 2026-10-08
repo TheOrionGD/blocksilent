@@ -147,49 +147,19 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CONTEXT &amp; SUBSYSTEM CONFIGURATIONS"
+                    android:text="SUBSYSTEM CONFIGURATIONS"
                     android:textColor="?attr/colorPrimary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
-
-                <Button
-                    android:id="@+id/btnSettingsWifiSurvey"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:gravity="start|center_vertical"
-                    android:text="📡 2. Indoor Detection &amp; Wi-Fi AP Survey"
-                    android:textSize="14sp" />
-
-                <Button
-                    android:id="@+id/btnSettingsSensors"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:gravity="start|center_vertical"
-                    android:text="🔄 3. Sensor Flip-to-Silence &amp; Pickup"
-                    android:textSize="14sp" />
 
                 <Button
                     android:id="@+id/btnSettingsEmergency"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="10dp"
                     android:gravity="start|center_vertical"
-                    android:text="🚨 4. VIP Contacts &amp; Emergency Break-Glass"
-                    android:textSize="14sp" />
-
-                <Button
-                    android:id="@+id/btnSettingsNoise"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:gravity="start|center_vertical"
-                    android:text="🎙️ 5. Campus Noise Detection &amp; Privacy"
+                    android:text="🚨 VIP Contacts &amp; Emergency Break-Glass"
                     android:textSize="14sp" />
 
                 <Button
@@ -199,7 +169,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:gravity="start|center_vertical"
-                    android:text="⌚ 6. Smartwatch &amp; Wearable Haptics"
+                    android:text="⌚ Smartwatch &amp; Wearable Haptics"
                     android:textSize="14sp" />
 
             </LinearLayout>

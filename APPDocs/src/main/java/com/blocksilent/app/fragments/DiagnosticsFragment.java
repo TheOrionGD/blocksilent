@@ -33,8 +33,8 @@ public class DiagnosticsFragment extends Fragment {
     private ProgressBar progressDiagHealth;
     private TextView tvDiagBgLocDetail, tvDiagDndDetail, tvDiagBattDetail;
     private Button btnFixDiagBgLoc, btnFixDiagDnd, btnFixDiagBatt;
-    private TextView tvDiagGeofence, tvDiagBootReceiver, tvDiagWifiContext, tvDiagSensorEngine;
-    private TextView tvDiagTimetable, tvDiagEmergency, tvDiagWearable, tvDiagNoise;
+    private TextView tvDiagGeofence, tvDiagBootReceiver;
+    private TextView tvDiagTimetable, tvDiagEmergency, tvDiagWearable;
     private Button btnRefreshDiagnostics, btnDiagReRegisterAll;
 
     private GeofenceManager geofenceManager;
@@ -62,12 +62,9 @@ public class DiagnosticsFragment extends Fragment {
 
         tvDiagGeofence = view.findViewById(R.id.tvDiagGeofence);
         tvDiagBootReceiver = view.findViewById(R.id.tvDiagBootReceiver);
-        tvDiagWifiContext = view.findViewById(R.id.tvDiagWifiContext);
-        tvDiagSensorEngine = view.findViewById(R.id.tvDiagSensorEngine);
         tvDiagTimetable = view.findViewById(R.id.tvDiagTimetable);
         tvDiagEmergency = view.findViewById(R.id.tvDiagEmergency);
         tvDiagWearable = view.findViewById(R.id.tvDiagWearable);
-        tvDiagNoise = view.findViewById(R.id.tvDiagNoise);
 
         btnRefreshDiagnostics = view.findViewById(R.id.btnRefreshDiagnostics);
         btnDiagReRegisterAll = view.findViewById(R.id.btnDiagReRegisterAll);
@@ -184,15 +181,10 @@ public class DiagnosticsFragment extends Fragment {
         }
 
         int registeredGeofences = geofenceManager.getRegisteredGeofencesCount();
-        tvDiagGeofence.setText("📍 Google Play Geofence Client : ✓ " + registeredGeofences + " Zone(s) Registered");
+        tvDiagGeofence.setText("📍 Real-Time Location Engine   : ✓ " + registeredGeofences + " Active Block Geofence(s)");
         tvDiagBootReceiver.setText("🔄 BootCompleted Receiver     : ✓ Registered (Reboot Safe)");
-        tvDiagWifiContext.setText("📡 Wi-Fi BSSID Indoor Engine   : ✓ Active (Room & Floor)");
-        tvDiagSensorEngine.setText("🔄 Flip-to-Silence Fusion      : ✓ Accelerometer + Proximity");
         tvDiagTimetable.setText("📅 Academic Timetable Resolver : ✓ Synchronized");
-        tvDiagEmergency.setText("🚨 VIP Emergency Break-Glass   : ✓ Active (SMS & Cooldown)");
+        tvDiagEmergency.setText("🚨 VIP Emergency Break-Glass   : ✓ Active (SMS & Call)");
         tvDiagWearable.setText("⌚ Wear OS Haptic Dispatches   : ✓ Ready");
-
-        boolean micGranted = ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
-        tvDiagNoise.setText("🎙️ Privacy Noise Estimation    : " + (micGranted ? "✓ In-Memory RMS Ready" : "⚠️ Mic Permission Optional"));
     }
 }

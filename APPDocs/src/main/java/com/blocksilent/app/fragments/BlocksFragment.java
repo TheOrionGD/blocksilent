@@ -93,11 +93,14 @@ public class BlocksFragment extends Fragment implements BlockAdapter.OnBlockActi
                 .setPositiveButton("Delete", (dialog, which) -> {
                     AppDatabase.databaseWriteExecutor.execute(() -> {
                         database.blockDao().delete(block);
+                        database.activeGeofenceStateDao().deleteByBlockId(block.getId());
 
                         // Re-register remaining geofences
                         List<BlockEntity> enabledBlocks = database.blockDao().getEnabledBlocksSync();
                         GeofenceManager geofenceManager = new GeofenceManager(appContext);
                         geofenceManager.registerGeofences(enabledBlocks);
+
+                        com.blocksilent.app.context.ContextEngine.getInstance(appContext).evaluateAndApplyContext("BLOCK_DELETED");
 
                         if (getActivity() != null) {
                             getActivity().runOnUiThread(() -> {
@@ -119,10 +122,15 @@ public class BlocksFragment extends Fragment implements BlockAdapter.OnBlockActi
         AppDatabase.databaseWriteExecutor.execute(() -> {
             block.setEnabled(enabled);
             database.blockDao().update(block);
+            if (!enabled) {
+                database.activeGeofenceStateDao().deleteByBlockId(block.getId());
+            }
 
             List<BlockEntity> enabledBlocks = database.blockDao().getEnabledBlocksSync();
             GeofenceManager geofenceManager = new GeofenceManager(appContext);
             geofenceManager.registerGeofences(enabledBlocks);
+
+            com.blocksilent.app.context.ContextEngine.getInstance(appContext).evaluateAndApplyContext("BLOCK_TOGGLED");
         });
     }
 }

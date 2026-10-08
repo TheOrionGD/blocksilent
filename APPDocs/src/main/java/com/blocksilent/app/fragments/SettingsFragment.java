@@ -23,7 +23,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 public class SettingsFragment extends Fragment {
 
     private SwitchMaterial switchAutomation, switchNotifications;
-    private Button btnSettingsWifiSurvey, btnSettingsSensors, btnSettingsEmergency, btnSettingsNoise, btnSettingsWearables;
+    private Button btnSettingsEmergency, btnSettingsWearables;
     private Button btnSettingsDiagnostics, btnSettingsBatteryOptimization, btnSettingsPrivacyPolicy, btnClearAllData;
 
     private AppDatabase database;
@@ -39,10 +39,7 @@ public class SettingsFragment extends Fragment {
         switchAutomation = view.findViewById(R.id.switchSettingsAutomation);
         switchNotifications = view.findViewById(R.id.switchSettingsNotifications);
 
-        btnSettingsWifiSurvey = view.findViewById(R.id.btnSettingsWifiSurvey);
-        btnSettingsSensors = view.findViewById(R.id.btnSettingsSensors);
         btnSettingsEmergency = view.findViewById(R.id.btnSettingsEmergency);
-        btnSettingsNoise = view.findViewById(R.id.btnSettingsNoise);
         btnSettingsWearables = view.findViewById(R.id.btnSettingsWearables);
 
         btnSettingsDiagnostics = view.findViewById(R.id.btnSettingsDiagnostics);
@@ -82,27 +79,9 @@ public class SettingsFragment extends Fragment {
     }
 
     private void setupListeners() {
-        btnSettingsWifiSurvey.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).loadFragment(new WifiSurveyFragment());
-            }
-        });
-
-        btnSettingsSensors.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).loadFragment(new SensorSettingsFragment());
-            }
-        });
-
         btnSettingsEmergency.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).loadFragment(new EmergencySettingsFragment());
-            }
-        });
-
-        btnSettingsNoise.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).loadFragment(new NoiseDetectionFragment());
             }
         });
 
@@ -136,7 +115,7 @@ public class SettingsFragment extends Fragment {
     private void showClearAllDataConfirmation() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete All Local Data?")
-                .setMessage("This will permanently delete all saved blocks, Wi-Fi mappings, sensor configurations, VIP contacts, timetables, and audit history from your device. Are you sure?")
+                .setMessage("This will permanently delete all saved blocks, VIP contacts, timetables, and audit history from your device. Are you sure?")
                 .setPositiveButton("Delete Everything", (dialog, which) -> {
                     Context appContext = requireContext().getApplicationContext();
                     AppDatabase.databaseWriteExecutor.execute(() -> {
@@ -149,10 +128,8 @@ public class SettingsFragment extends Fragment {
                             database.historyDao().deleteAll();
                             database.contactDao().deleteAll();
                             database.activeGeofenceStateDao().deleteAll();
-                            database.wifiZoneDao().deleteAll();
                             database.emergencyContactDao().deleteAll();
                             database.emergencyEventDao().deleteAll();
-                            database.noiseSampleDao().deleteAll();
                             database.automationDecisionDao().deleteAll();
                             database.settingsDao().insertOrUpdate(new SettingsEntity(true, true, "NORMAL", 0, false));
                         }
@@ -170,3 +147,4 @@ public class SettingsFragment extends Fragment {
                 .show();
     }
 }
+

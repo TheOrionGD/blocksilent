@@ -1,36 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Brand / Theme Primary Colors -->
-    <color name="primary">#4F46E5</color>
-    <color name="primary_dark">#4338CA</color>
+    <color name="primary">#4338CA</color>
+    <color name="primary_dark">#3730A3</color>
     <color name="primary_light">#EEF2FF</color>
-    <color name="color_accent">#06B6D4</color>
+    <color name="color_accent">#0284C7</color>
 
     <!-- Surfaces and Backgrounds -->
     <color name="background_light">#F8FAFC</color>
     <color name="card_background">#FFFFFF</color>
     <color name="surface_variant">#F1F5F9</color>
-    <color name="card_stroke">#E2E8F0</color>
+    <color name="card_stroke">#CBD5E1</color>
     <color name="divider_color">#E2E8F0</color>
 
-    <!-- High-Contrast Text Tokens -->
+    <!-- High-Contrast Text Tokens (WCAG Compliant) -->
     <color name="text_primary">#0F172A</color>
-    <color name="text_secondary">#475569</color>
-    <color name="text_tertiary">#94A3B8</color>
+    <color name="text_secondary">#334155</color>
+    <color name="text_tertiary">#64748B</color>
 
     <!-- Status Indicators -->
-    <color name="status_active">#10B981</color>
-    <color name="status_inactive">#EF4444</color>
-    <color name="status_warning">#F59E0B</color>
-    <color name="status_silent">#8B5CF6</color>
-    <color name="status_vibrate">#06B6D4</color>
+    <color name="status_active">#047857</color>
+    <color name="status_inactive">#B91C1C</color>
+    <color name="status_warning">#B45309</color>
+    <color name="status_silent">#6D28D9</color>
+    <color name="status_vibrate">#0369A1</color>
 
     <!-- Sound Modes -->
-    <color name="mode_silent">#8B5CF6</color>
-    <color name="mode_vibrate">#06B6D4</color>
-    <color name="mode_normal">#10B981</color>
+    <color name="mode_silent">#6D28D9</color>
+    <color name="mode_vibrate">#0369A1</color>
+    <color name="mode_normal">#047857</color>
 
-    <!-- Badges & Tags Backgrounds -->
+    <!-- Badges & Tags Backgrounds & Text -->
     <color name="badge_active_bg">#D1FAE5</color>
     <color name="badge_active_border">#059669</color>
     <color name="badge_inactive_bg">#FEE2E2</color>
@@ -39,24 +39,25 @@
     <color name="badge_normal_border">#10B981</color>
     <color name="badge_silent_bg">#F3E8FF</color>
     <color name="badge_silent_border">#8B5CF6</color>
-    <color name="badge_vibrate_bg">#ECFEFF</color>
-    <color name="badge_vibrate_border">#06B6D4</color>
+    <color name="badge_vibrate_bg">#E0F2FE</color>
+    <color name="badge_vibrate_border">#0284C7</color>
 
     <!-- Semantic Alerts & Cards -->
     <color name="warning_card_bg">#FFFBEB</color>
     <color name="warning_card_stroke">#FDE68A</color>
-    <color name="warning_card_text_title">#B45309</color>
-    <color name="warning_card_text_desc">#92400E</color>
+    <color name="warning_card_text_title">#92400E</color>
+    <color name="warning_card_text_desc">#78350F</color>
     <color name="warning_card_btn_bg">#D97706</color>
 
     <color name="danger_card_bg">#FEF2F2</color>
     <color name="danger_card_stroke">#FECACA</color>
-    <color name="danger_card_text_title">#B91C1C</color>
-    <color name="danger_card_text_desc">#991B1B</color>
+    <color name="danger_card_text_title">#991B1B</color>
+    <color name="danger_card_text_desc">#7F1D1D</color>
     <color name="danger_card_btn_bg">#DC2626</color>
 
     <color name="hero_strip_bg">#F1F5F9</color>
     <color name="bottom_nav_bg">#FFFFFF</color>
-    <color name="nav_item_selected">#4F46E5</color>
-    <color name="nav_item_unselected">#64748B</color>
+    <color name="nav_item_selected">#4338CA</color>
+    <color name="nav_item_unselected">#475569</color>
 </resources>
+

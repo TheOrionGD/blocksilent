@@ -15,12 +15,9 @@ import com.blocksilent.app.database.entities.ContactEntity;
 import com.blocksilent.app.database.entities.EmergencyContactEntity;
 import com.blocksilent.app.database.entities.EmergencyEventEntity;
 import com.blocksilent.app.database.entities.HistoryEntity;
-import com.blocksilent.app.database.entities.NoiseSampleEntity;
-import com.blocksilent.app.database.entities.SensorSettingsEntity;
 import com.blocksilent.app.database.entities.SettingsEntity;
 import com.blocksilent.app.database.entities.TimetableEntity;
 import com.blocksilent.app.database.entities.WearableSettingsEntity;
-import com.blocksilent.app.database.entities.WifiZoneEntity;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,15 +30,12 @@ import java.util.concurrent.Executors;
         ContactEntity.class,
         SettingsEntity.class,
         ActiveGeofenceStateEntity.class,
-        WifiZoneEntity.class,
-        SensorSettingsEntity.class,
         EmergencyContactEntity.class,
         EmergencyEventEntity.class,
-        NoiseSampleEntity.class,
         WearableSettingsEntity.class,
         AutomationDecisionEntity.class
     },
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -52,11 +46,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ContactDao contactDao();
     public abstract SettingsDao settingsDao();
     public abstract ActiveGeofenceStateDao activeGeofenceStateDao();
-    public abstract WifiZoneDao wifiZoneDao();
-    public abstract SensorSettingsDao sensorSettingsDao();
     public abstract EmergencyContactDao emergencyContactDao();
     public abstract EmergencyEventDao emergencyEventDao();
-    public abstract NoiseSampleDao noiseSampleDao();
     public abstract WearableSettingsDao wearableSettingsDao();
     public abstract AutomationDecisionDao automationDecisionDao();
 
@@ -91,13 +82,10 @@ public abstract class AppDatabase extends RoomDatabase {
                 SettingsDao settingsDao = INSTANCE.settingsDao();
                 settingsDao.insertOrUpdate(new SettingsEntity(true, true, "NORMAL", 0, true));
 
-                // Initialize default sensor and wearable settings
-                SensorSettingsDao sensorSettingsDao = INSTANCE.sensorSettingsDao();
-                sensorSettingsDao.insertOrUpdate(new SensorSettingsEntity(true, true, false, true, 1000L, -7.5f));
-
                 WearableSettingsDao wearableSettingsDao = INSTANCE.wearableSettingsDao();
                 wearableSettingsDao.insertOrUpdate(new WearableSettingsEntity(true, "SHORT_SHORT", "LONG_SHORT", "LONG_LONG_LONG"));
             });
         }
     };
 }
+

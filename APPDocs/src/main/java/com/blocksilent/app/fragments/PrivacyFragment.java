@@ -27,8 +27,6 @@ public class PrivacyFragment extends Fragment {
     private TextView tvKeystoreStatus;
     private Button btnTestKeyStore;
     private Button btnPurgeHistoryOnly;
-    private Button btnPurgeNoiseSamples;
-    private Button btnPurgeWifiZones;
     private Button btnClearDataPrivacy;
 
     @Nullable
@@ -40,8 +38,6 @@ public class PrivacyFragment extends Fragment {
         tvKeystoreStatus = view.findViewById(R.id.tvKeystoreStatus);
         btnTestKeyStore = view.findViewById(R.id.btnTestKeyStore);
         btnPurgeHistoryOnly = view.findViewById(R.id.btnPurgeHistoryOnly);
-        btnPurgeNoiseSamples = view.findViewById(R.id.btnPurgeNoiseSamples);
-        btnPurgeWifiZones = view.findViewById(R.id.btnPurgeWifiZones);
         btnClearDataPrivacy = view.findViewById(R.id.btnClearDataPrivacy);
 
         btnBackPrivacy.setOnClickListener(v -> {
@@ -54,8 +50,6 @@ public class PrivacyFragment extends Fragment {
 
         btnTestKeyStore.setOnClickListener(v -> testKeyStoreLoop());
         btnPurgeHistoryOnly.setOnClickListener(v -> purgeHistoryLogs());
-        btnPurgeNoiseSamples.setOnClickListener(v -> purgeNoiseSamples());
-        btnPurgeWifiZones.setOnClickListener(v -> purgeWifiZones());
         btnClearDataPrivacy.setOnClickListener(v -> showClearAllDataConfirmation());
 
         return view;
@@ -108,58 +102,12 @@ public class PrivacyFragment extends Fragment {
                 .show();
     }
 
-    private void purgeNoiseSamples() {
-        if (!isAdded() || getContext() == null) return;
-        Context appContext = requireContext().getApplicationContext();
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Purge Noise Samples")
-                .setMessage("Delete all ambient decibel logs from database?")
-                .setPositiveButton("Purge", (dialog, which) -> {
-                    AppDatabase.databaseWriteExecutor.execute(() -> {
-                        AppDatabase db = AppDatabase.getInstance(appContext);
-                        db.noiseSampleDao().deleteAll();
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() -> {
-                                if (isAdded() && getContext() != null) {
-                                    Toast.makeText(requireContext(), "Noise samples purged.", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        }
-                    });
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void purgeWifiZones() {
-        if (!isAdded() || getContext() == null) return;
-        Context appContext = requireContext().getApplicationContext();
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Purge Wi-Fi Indoor Maps")
-                .setMessage("Delete all mapped Wi-Fi BSSID access points?")
-                .setPositiveButton("Purge", (dialog, which) -> {
-                    AppDatabase.databaseWriteExecutor.execute(() -> {
-                        AppDatabase db = AppDatabase.getInstance(appContext);
-                        db.wifiZoneDao().deleteAll();
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() -> {
-                                if (isAdded() && getContext() != null) {
-                                    Toast.makeText(requireContext(), "Wi-Fi maps deleted.", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        }
-                    });
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
     private void showClearAllDataConfirmation() {
         if (!isAdded() || getContext() == null) return;
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("Factory Reset App Data?")
-                .setMessage("This will permanently delete all geofences, Wi-Fi zones, emergency contacts, history, sensor calibrations, and settings from your device. Are you sure?")
+                .setMessage("This will permanently delete all geofences, emergency contacts, history, and settings from your device. Are you sure?")
                 .setPositiveButton("Reset Everything", (dialog, which) -> {
                     Context appContext = requireContext().getApplicationContext();
                     AppDatabase.databaseWriteExecutor.execute(() -> {
@@ -172,12 +120,9 @@ public class PrivacyFragment extends Fragment {
                         database.historyDao().deleteAll();
                         database.contactDao().deleteAll();
                         database.activeGeofenceStateDao().deleteAll();
-                        database.wifiZoneDao().deleteAll();
                         database.emergencyContactDao().deleteAll();
                         database.emergencyEventDao().deleteAll();
-                        database.noiseSampleDao().deleteAll();
                         database.automationDecisionDao().deleteAll();
-                        database.sensorSettingsDao().deleteAll();
                         database.wearableSettingsDao().deleteAll();
 
                         database.settingsDao().insertOrUpdate(new SettingsEntity(true, true, "NORMAL", 0, false));
@@ -195,3 +140,4 @@ public class PrivacyFragment extends Fragment {
                 .show();
     }
 }
+

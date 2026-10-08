@@ -1,0 +1,400 @@
+================================================================================
+           BLOCKSILENT - COMPLETE ARCHITECTURAL & WORKFLOW ANALYSIS
+================================================================================
+Application Name : BlockSilent (Auto Sound Mode)
+Package Name     : com.blocksilent.app
+Platform         : Native Android (Java) / Offline-First Room DB Architecture
+Target System    : Android 7.0 (API 24) to Android 14+ (API 36)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. OBJECTIVE & PURPOSE
+--------------------------------------------------------------------------------
+BlockSilent is an intelligent, zero-cloud, context-aware sound automation system 
+engineered specifically for academic campuses, libraries, laboratories, and 
+structured workplace environments. 
+
+The primary objective is to eliminate the embarrassment, disruption, and academic 
+penalties of ringing or chiming phones during lectures, laboratory sessions, and 
+formal examinations. 
+
+Unlike standard sound profile schedulers that rely solely on static time-based clocks 
+or battery-draining continuous GPS tracking, BlockSilent integrates hardware-level 
+geofencing (Google Play Services), indoor Wi-Fi BSSID proximity detection, real-time 
+device orientation sensors (Flip-to-Silence), and weekly academic timetables into a 
+deterministic, hierarchical Priority Resolution Engine. Furthermore, it incorporates 
+a life-safety "Emergency Break-Glass" VIP protocol to guarantee critical family 
+calls always pierce through silent modes.
+
+
+--------------------------------------------------------------------------------
+2. HIGH-LEVEL SYSTEM DESCRIPTION
+--------------------------------------------------------------------------------
+BlockSilent operates on a 100% offline-first, local-first philosophy. There are no 
+remote tracking servers, analytics trackers, cloud databases, or background telemetry. 
+All coordinates, timetables, VIP contact lists, and event logs remain strictly on 
+the user's physical hardware within an encrypted SQLite/Room database.
+
+The system continuously assesses contextual inputs from five independent triggers:
+  1. GPS / Cellular Geofence Boundaries (Macro-location: Campus buildings)
+  2. Wi-Fi Access Point BSSID Fingerprinting (Micro-location: Floors and Rooms)
+  3. Device Orientation & Proximity Sensors (Physical context: Desk Face-Down)
+  4. Weekly Academic Timetables (Temporal context: Subject & Class hours)
+  5. VIP Emergency Overrides & Break-Glass SMS (Safety context: Urgent family alerts)
+
+Whenever any environmental or temporal parameter changes, the unified Context Engine 
+evaluates the state against a strict priority hierarchy and executes the appropriate 
+hardware AudioManager transition (SILENT, VIBRATE, or NORMAL) within milliseconds.
+
+
+--------------------------------------------------------------------------------
+3. CORE APP MODULES & TECHNICAL ARCHITECTURE
+--------------------------------------------------------------------------------
+The codebase is structured into modular layers designed for separation of concerns:
+
+A. Database Layer (com.blocksilent.app.database)
+   • AppDatabase: Thread-safe Room database instance with automated migrations.
+   • BlockDao / BlockEntity: Campus geofence blocks (lat, lng, radius, sound mode, priority).
+   • TimetableDao / TimetableEntity: Weekly recurring class slots tied to specific blocks.
+   • ActiveGeofenceStateDao / ActiveGeofenceStateEntity: Real-time tracking of zone entries/exits.
+   • HistoryDao / HistoryEntity: Full audit trail of transitions with timestamps and triggers.
+   • EmergencyContactDao / EmergencyEventDao: VIP emergency whitelist and trigger history.
+   • WifiZoneDao / WifiZoneEntity: Indoor Wi-Fi BSSID access point room/floor mappings.
+   • SensorSettingsDao / SensorSettingsEntity: Thresholds for accelerometer and light sensors.
+   • AutomationDecisionDao / AutomationDecisionEntity: Detailed logic reasoning records.
+   • SettingsDao / SettingsEntity: Global automation toggles, notification preferences, override timers.
+
+B. Context & Priority Arbitration Engine (com.blocksilent.app.context)
+   • ContextEngine: The central singleton aggregator. Listens to sensor changes, geofence broadcasts, 
+     Wi-Fi association changes, and timetable ticks. It compiles the current context state and 
+     triggers the PriorityResolver.
+   • PriorityResolver: Pure deterministic decision tree resolving conflicts between overlapping zones, 
+     sensors, timers, and emergency overrides.
+   • ContextState: Reactive data model exposing real-time status to the UI through LiveData.
+
+C. Location & Geofencing Subsystem (com.blocksilent.app.geofence, services, utils)
+   • GeofenceManager: Handles registration, updates, and unregistration of circular geofences 
+     with Google Play Services LocationClient.
+   • GeofenceBroadcastReceiver: Wakes on hardware boundary crossing with PendingIntent.
+   • GeofenceEventProcessor: Validates transitions (ENTER, EXIT, DWELL) and applies a 6-second 
+     debounce filter to eliminate perimeter bounce.
+   • LocationMonitoringService: Foreground service for high-reliability location monitoring.
+   • LocationHelper / PermissionManager: Manages fine location, coarse location, background 
+     location permissions, and GPS availability checks.
+
+D. Indoor Micro-Localization & Sensors (com.blocksilent.app.wifi, sensors, noise)
+   • WifiZoneManager: Matches connected Wi-Fi SSID and BSSID against room-specific mappings.
+   • SensorContextEngine: Evaluates tri-axis accelerometer (Z-axis gravity < -7.0 m/s²), 
+     proximity sensor (< 2 cm), and ambient light (< 25 lux) to detect table flip-down gestures.
+   • NoiseDetector: Zero-storage, in-memory RMS acoustic sensor. Calculates ambient sound pressure 
+     (dB) without recording or retaining audio data.
+
+E. VIP Emergency Break-Glass Subsystem (com.blocksilent.app.emergency)
+   • EmergencyManager: Manages high-priority override states, siren playback, and contact cooldowns.
+   • EmergencySmsReceiver: BroadcastReceiver monitoring incoming SMS for configured emergency 
+     keywords ("EMERGENCY") from whitelisted numbers.
+   • CallStateReceiver: Monitors repeated missed calls from VIP contacts to trigger override.
+
+F. Presentation & UI Layer (com.blocksilent.app.activities, fragments, adapters)
+   • Material Design 3 interactive UI with custom cards, badges, status meters, and animations.
+
+
+--------------------------------------------------------------------------------
+4. END-TO-END APPLICATION FLOW & LIFECYCLE
+--------------------------------------------------------------------------------
+
+1. Boot & Cold Launch:
+   • Device Boot -> BootCompletedReceiver wakes -> Reads active blocks from Room DB -> 
+     Re-registers all geofences with Google Play Services.
+   • User clicks App Icon -> SplashActivity displays branding -> Reads SettingsEntity.
+   • If first launch (isFirstTimeLaunch == true) -> Navigates to OnboardingActivity.
+   • If setup complete -> Navigates to MainActivity (Dashboard).
+
+2. Background Execution & State Maintenance:
+   • The app does not need to remain open in the foreground.
+   • When the user walks into a campus block:
+     a. Android OS Location Subsystem triggers GeofenceBroadcastReceiver.
+     b. Receiver passes event to GeofenceEventProcessor in a background thread.
+     c. Event processor updates ActiveGeofenceStateEntity in Room DB.
+     d. ContextEngine gathers active geofences, Wi-Fi BSSID, and current Timetable slot.
+     e. PriorityResolver selects winning sound mode.
+     f. SoundModeManager applies AudioManager settings (e.g., RINGER_MODE_SILENT).
+     g. WearableNotificationHelper dispatches a haptic alert to Wear OS devices & system shade.
+     h. HistoryDao logs the event with timestamp and source explanation.
+
+3. Exit & Restoration:
+   • When the user exits the block:
+     a. OS fires GEOFENCE_TRANSITION_EXIT.
+     b. ActiveGeofenceState is cleared.
+     c. ContextEngine detects no remaining active blocks or timetable slots.
+     d. SoundModeManager restores previous sound mode (NORMAL/RING).
+
+
+--------------------------------------------------------------------------------
+5. DETAILED PAGE-BY-PAGE ANALYSIS & DISTINCTIONS
+--------------------------------------------------------------------------------
+
+Each screen in BlockSilent is designed with a specific functional scope and distinct UI components:
+
+1. Splash Screen (SplashActivity)
+   • Purpose: Initial setup check and brand welcome.
+   • Distinct UI: Animated app icon, title card, progress indicator.
+   • Interaction: Automatically reads Room settings and routes to Onboarding or Dashboard.
+
+2. Onboarding Wizard (OnboardingActivity)
+   • Purpose: Guided permission walkthrough and education.
+   • Distinct UI: Multi-slide ViewPager with illustrations and Permission Grant buttons.
+   • Key Steps: 
+     - Slide 1: Welcome & Value Proposition.
+     - Slide 2: Geofencing & Background Location explanation ("Allow all the time").
+     - Slide 3: Do Not Disturb (DND) Policy Access authorization.
+     - Slide 4: Battery Optimization exemption & Finalization.
+   • Outcome: Flags isFirstTimeLaunch = false and launches MainActivity.
+
+3. Main Dashboard (HomeFragment / activity_main.xml)
+   • Purpose: Central operational overview, real-time status monitor, and live demo tester.
+   • Distinct UI:
+     - Real-Time Mode Badge (SILENT / VIBRATE / NORMAL) with live color feedback.
+     - System Status Banner (Active Zones, GPS readiness, DND readiness).
+     - Subsystem Badges: GPS status, Wi-Fi AP status, Flip Sensor state, Ambient dB.
+     - Metric Counters: Total Configured Blocks, Automation Changes Today.
+     - Action Shortcuts: Add Block, View Timetable, Emergency Override, Diagnostics.
+     - Interactive Simulator Bar: Spinner to simulate entering/exiting blocks, Wi-Fi rooms, or phone flip.
+
+4. Blocks Management Screen (BlocksFragment)
+   • Purpose: View, search, toggle, edit, or delete geofenced campus zones.
+   • Distinct UI: 
+     - List of cards showing Block Name, Radius (e.g. 50m), Target Sound Mode, Coordinates.
+     - Toggle switch to immediately enable/disable geofences.
+     - Floating Action Button (FAB) to add a new block.
+     - Contextual Action Menu for Editing and Deleting.
+
+5. Add / Edit Block Screen (AddEditBlockActivity)
+   • Purpose: Configure geofence boundaries, name, radius, and sound profile.
+   • Distinct UI:
+     - Block Name Input.
+     - Coordinates Input (Latitude, Longitude).
+     - "Acquire Current GPS" button with live location helper.
+     - "Select on Map" button to open interactive Google Map.
+     - Quick Radius Chips (25m, 50m, 75m, 100m, or Custom Number).
+     - Sound Mode Selector (Silent, Vibrate, Normal).
+     - Activation Switch.
+
+6. Map Location Picker (MapActivity)
+   • Purpose: Visual geospatial placement of geofence center and radius preview.
+   • Distinct UI: Full-screen Google Map with center target, drag marker, and translucent circle overlay.
+   • Interaction: Tap or drag to set pinpoint coordinates, adjust radius, and return data to caller.
+
+7. Weekly Academic Timetable (TimetableFragment)
+   • Purpose: Timetable schedule manager synchronized with campus locations.
+   • Distinct UI:
+     - Day of Week Filter Bar (Monday to Sunday chips + All filter).
+     - Timetable cards showing Subject Name, Time Window (e.g., 09:00 AM - 10:30 AM), Assigned Block, Mode.
+     - "Add Class Slot" floating/header button with TimePicker dialog.
+     - Enable/Disable switch per subject slot.
+
+8. History & Audit Log (HistoryFragment)
+   • Purpose: Transparent record of every automated sound change.
+   • Distinct UI:
+     - Chronological timeline cards.
+     - Shows Timestamp, Trigger Source (GPS, Timetable, Sensor, Emergency), From Mode -> To Mode, Reason text.
+     - Search & Filter bar by location name or date.
+     - Clear History action.
+
+9. Settings Hub (SettingsFragment)
+   • Purpose: Central navigation for advanced features and system preferences.
+   • Distinct UI: Grouped setting cards with instant toggles:
+     - Master Automation Toggle (Global On/Off).
+     - Notification Preferences.
+     - Sub-navigation buttons for Sensors, Wi-Fi Survey, Emergency VIPs, Wearables, Diagnostics, Privacy.
+     - "Clear All Local Data" danger action with double confirmation.
+
+10. System Diagnostics & Health Hub (DiagnosticsFragment)
+    • Purpose: Real-time subsystem verification and troubleshooting tool.
+    • Distinct UI:
+      - Overall Health Integrity Score (e.g. 100% Operational).
+      - Status Checks: Background Location, DND Access, Battery Optimization, Google Play Geofence Service,
+        Boot Receiver, Wi-Fi Engine, Sensor Fusion, Timetable Engine, VIP Emergency Receiver.
+      - "Fix Permission" contextual action buttons for any degraded subsystem.
+      - "Force Re-register All Geofences" repair button.
+
+11. VIP Emergency & Break-Glass Settings (EmergencySettingsFragment)
+    • Purpose: Life-safety override configuration and emergency alert management.
+    • Distinct UI:
+      - Active Emergency Banner (appears with sound siren controls when emergency is active).
+      - Emergency Contact List (Name, Phone Number, Priority Level, SMS Keyword Enabled).
+      - Manual Temporary Pause buttons (1 Hour, 2 Hours, 4 Hours override).
+      - "Add VIP Contact" dialog with keyword filter and siren configuration.
+
+12. Wi-Fi Proximity Survey & Indoor Mapping (WifiSurveyFragment)
+    • Purpose: Micro-location room identification using Wi-Fi Access Points (BSSIDs).
+    • Distinct UI:
+      - Connected Wi-Fi AP details (SSID, BSSID MAC address, Signal Strength RSSI).
+      - "Map Current AP as Room" form (Room Name, Floor Number, Assigned Sound Mode).
+      - Saved Indoor Wi-Fi zones list with quick delete/toggle.
+
+13. Sensor Context Engine Settings (SensorSettingsFragment)
+    • Purpose: Fine-tuning physical gesture behaviors.
+    • Distinct UI:
+      - Flip-to-Silence Toggle.
+      - Proximity Sensor Verification requirement toggle.
+      - Low Ambient Light verification requirement toggle (prevents pocket accidental triggers).
+      - Hold Duration Slider (e.g. 1500 ms to confirm desk placement).
+      - Pickup Restore toggle.
+
+14. Ambient Noise Meter & Calibration (NoiseDetectionFragment)
+    • Purpose: Calibrate background noise threshold and sample current room decibels.
+    • Distinct UI:
+      - Real-time dB gauge / visual sound meter.
+      - Classification badge (Quiet Study Zone < 40dB, Moderate 40-60dB, Active > 60dB).
+      - "Sample Ambient Noise" test button.
+      - Privacy reassurance banner confirming no audio storage.
+
+15. Wearable & Haptic Settings (WearableSettingsFragment)
+    • Purpose: Configure smart watch and notification shade behavior.
+    • Distinct UI:
+      - Wear OS Haptic Vibration toggle.
+      - Persistent Notification toggle (showing current active block in Android notification tray).
+      - Preview Haptic Pulse button.
+
+16. Battery Optimization Exemption (BatteryOptimizationFragment)
+    • Purpose: Guide users through OEM battery saver whitelisting (MIUI, Samsung OneUI, Pixel, etc.).
+    • Distinct UI: OEM detection card, explanation of background execution restrictions, direct deep-link button.
+
+17. Privacy & Local Storage Viewer (PrivacyFragment)
+    • Purpose: Complete privacy transparency and local database inspection.
+    • Distinct UI:
+      - Summary of data stored (Table row counts for Blocks, History, Timetables).
+      - Privacy guarantee checklist (Zero network transmission, zero cloud dependencies).
+      - Export diagnostic log button.
+
+
+--------------------------------------------------------------------------------
+6. NAVIGATION & INTERCONNECTIVITY FLOW
+--------------------------------------------------------------------------------
+
+[App Start]
+    │
+    ▼
+[SplashActivity] ──(First Launch?)──► [OnboardingActivity]
+    │                                          │
+    │ (Returning User)                         │ (Completed)
+    ▼                                          ▼
+[MainActivity (BottomNavigation Root)]
+    ├──► Tab 1: [HomeFragment]
+    │         ├───► [AddEditBlockActivity] ──► [MapActivity]
+    │         ├───► [DiagnosticsFragment]
+    │         ├───► [EmergencySettingsFragment]
+    │         ├───► [WifiSurveyFragment]
+    │         ├───► [SensorSettingsFragment]
+    │         └───► [NoiseDetectionFragment]
+    │
+    ├──► Tab 2: [BlocksFragment]
+    │         └───► [AddEditBlockActivity] ──► [MapActivity]
+    │
+    ├──► Tab 3: [TimetableFragment]
+    │         └───► [Dialog: Add Timetable Entry]
+    │
+    ├──► Tab 4: [HistoryFragment]
+    │
+    └──► Tab 5: [SettingsFragment]
+              ├───► [DiagnosticsFragment]
+              ├───► [EmergencySettingsFragment]
+              ├───► [WifiSurveyFragment]
+              ├───► [SensorSettingsFragment]
+              ├───► [NoiseDetectionFragment]
+              ├───► [WearableSettingsFragment]
+              ├───► [BatteryOptimizationFragment]
+              └───► [PrivacyFragment]
+
+
+--------------------------------------------------------------------------------
+7. DETAILED OPERATIONAL WORKFLOWS
+--------------------------------------------------------------------------------
+
+Workflow 1: Geofence Entry & Sound Automation
+1. Student enters Physics Lecture Hall (50m radius).
+2. Android LocationClient fires GeofenceBroadcastReceiver with GEOFENCE_TRANSITION_ENTER.
+3. Receiver calls GeofenceEventProcessor (verifies 6-second debounce).
+4. Room DB records active entry in active_geofence_state.
+5. ContextEngine is notified -> passes active state to PriorityResolver.
+6. PriorityResolver checks:
+   - Emergency active? No.
+   - Manual pause? No.
+   - Timetable active? Yes, "Physics 101" (Silent).
+7. Decision resolved: SILENT mode.
+8. SoundModeManager safely invokes AudioManager.setRingerMode(RINGER_MODE_SILENT).
+9. Wearable helper fires silent wrist tap; notification banner updates.
+10. History logged: "Entered Physics Lecture Hall -> Sound mode set to SILENT".
+
+Workflow 2: Flip-to-Silence On Desk
+1. Student sits in study library and places phone face-down on desk.
+2. Accelerometer detects Z-axis < -7.0 m/s², Proximity detects < 2.0 cm, Light sensor < 25 lux.
+3. SensorContextEngine initiates a 1500 ms confirmation timer.
+4. After 1500 ms continuous flat orientation, onFaceDownSilenceStateChanged(true) fires.
+5. ContextEngine activates SILENT mode (Priority 80).
+6. When student picks up phone, Z-axis normalizes -> Pickup restored -> Sound mode restored in 500 ms.
+
+Workflow 3: VIP Emergency Break-Glass SMS
+1. Phone is in SILENT mode inside Exam Hall.
+2. Mother sends SMS: "Where are you? EMERGENCY call me now".
+3. EmergencySmsReceiver intercepts SMS broadcast.
+4. Checks sender number against whitelisted EmergencyContactDao.
+5. Identifies keyword "EMERGENCY" and confirms contact cooldown > 15 mins.
+6. EmergencyManager triggers Break-Glass:
+   - Sets temporary 2-hour manual override.
+   - AudioManager immediately switches to NORMAL mode with 100% ring/alarm volume.
+   - Starts looping audible emergency alarm siren.
+   - UI displays full-screen flashing Emergency Active banner with "Acknowledge" button.
+7. Student acknowledges alert -> Siren stops -> Automation remains paused until dismissed.
+
+Workflow 4: System Reboot & Cold Recovery
+1. Device battery dies or restarts.
+2. Android OS broadcasts ACTION_BOOT_COMPLETED.
+3. BootCompletedReceiver activates -> queries Room database for enabled blocks.
+4. Re-registers all geofence requests with Google Play Services.
+5. ContextEngine evaluates current time against TimetableDao to immediately restore correct sound state.
+
+
+--------------------------------------------------------------------------------
+8. COMPARISON: HOW BLOCKSILENT DIFFERS FROM EXISTING APPS
+--------------------------------------------------------------------------------
+
+| Feature / Dimension        | Standard Android DND / Timers | Generic Tools (Tasker / MacroDroid) | BlockSilent App |
+|----------------------------|-------------------------------|--------------------------------------|-----------------|
+| Setup Complexity           | Low (Manual schedule)         | Very High (Scripting required)       | Zero-friction (Turnkey Campus UI) |
+| Indoor Micro-Location      | No (Clock only)               | Requires custom regex scripts        | Built-in Wi-Fi BSSID Mapping |
+| Overlap Conflict Resolver  | None (Last rule wins)         | Complex manual variables             | Automated PriorityResolver Engine |
+| Battery Consumption        | Low                           | High (Constant background polling)   | Minimal (Event-driven Geofences) |
+| Emergency Break-Glass      | Basic DND star contacts only  | Requires custom SMS triggers         | Built-in VIP SMS Keyword + Siren |
+| Cloud Dependency & Privacy | Variable                      | Variable                             | 100% Offline-First / Zero Cloud |
+| Sensor Gesture Fusion      | Fixed OEM gesture (if present)| Complex configuration                | Calibrated Accelerometer + Proximity |
+| Built-in Diagnostics       | None                          | None                                 | Comprehensive 10-point Health Hub |
+
+
+--------------------------------------------------------------------------------
+9. CORE BENEFITS & VALUE PROPOSITION
+--------------------------------------------------------------------------------
+1. Guaranteed Peace of Mind: Students, professors, and professionals never need 
+   to worry about forgetting to silence their phones before entering class or meetings.
+2. Reliable Auto-Restoration: Phones automatically return to Normal ringer mode upon 
+   leaving the campus block, preventing missed important calls after school hours.
+3. Safety Without Compromise: The Emergency Break-Glass system ensures family members 
+   can always reach users in true emergencies without leaving phones unsilenced all day.
+4. Extreme Battery Efficiency: Uses OS-native hardware geofencing geocells instead of 
+   continuous GPS polling, ensuring 0% noticeable battery impact.
+5. Absolute Privacy: No location data, timetable schedules, or contacts ever leave 
+   the user's physical device.
+6. Works 100% Offline: Operates seamlessly in basement labs or underground lecture halls 
+   without requiring active internet connectivity.
+
+
+--------------------------------------------------------------------------------
+10. CONCLUSION
+--------------------------------------------------------------------------------
+BlockSilent represents a production-grade, native Android application engineered 
+to solve sound automation with enterprise-level robustness and consumer-grade simplicity. 
+Through its multi-layered contextual fusion (GPS Geofences, Wi-Fi BSSID Micro-location, 
+Sensor Gestures, and Timetables) managed by a unified Priority Resolution Engine, 
+it delivers an infallible, battery-efficient, and privacy-preserving user experience.
+================================================================================

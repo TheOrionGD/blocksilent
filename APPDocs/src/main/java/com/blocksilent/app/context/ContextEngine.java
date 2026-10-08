@@ -15,11 +15,9 @@ import com.blocksilent.app.database.entities.BlockEntity;
 import com.blocksilent.app.database.entities.HistoryEntity;
 import com.blocksilent.app.database.entities.SettingsEntity;
 import com.blocksilent.app.database.entities.TimetableEntity;
-import com.blocksilent.app.database.entities.WifiZoneEntity;
 import com.blocksilent.app.notifications.NotificationHelper;
 import com.blocksilent.app.utils.SoundModeManager;
 import com.blocksilent.app.wearable.WearableNotificationHelper;
-import com.blocksilent.app.wifi.WifiZoneManager;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,13 +35,10 @@ public class ContextEngine {
     private final SoundModeManager soundModeManager;
     private final NotificationHelper notificationHelper;
     private final WearableNotificationHelper wearableHelper;
-    private final WifiZoneManager wifiZoneManager;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private final MutableLiveData<ContextState> liveContextState = new MutableLiveData<>();
-    private boolean isFaceDownSilenced = false;
     private boolean isEmergencyActive = false;
-    private double currentNoiseDb = 35.0;
 
     public static ContextEngine getInstance(Context context) {
         if (INSTANCE == null) {
@@ -62,25 +57,15 @@ public class ContextEngine {
         this.soundModeManager = new SoundModeManager(this.context);
         this.notificationHelper = new NotificationHelper(this.context);
         this.wearableHelper = new WearableNotificationHelper(this.context);
-        this.wifiZoneManager = new WifiZoneManager(this.context);
     }
 
     public LiveData<ContextState> getLiveContextState() {
         return liveContextState;
     }
 
-    public void updateSensorSilenceState(boolean faceDown) {
-        this.isFaceDownSilenced = faceDown;
-        evaluateAndApplyContext("SENSOR");
-    }
-
     public void updateEmergencyState(boolean emergency) {
         this.isEmergencyActive = emergency;
         evaluateAndApplyContext("EMERGENCY");
-    }
-
-    public void updateNoiseSample(double noiseDb) {
-        this.currentNoiseDb = noiseDb;
     }
 
     public void triggerContextEvaluation(String triggerSource) {
@@ -115,23 +100,18 @@ public class ContextEngine {
                 }
             }
 
-            // 2. Gather Wi-Fi BSSID Indoor localization
-            WifiZoneEntity activeWifiZone = wifiZoneManager.getActiveMatchedWifiZoneSync();
-
-            // 3. Gather active Timetable schedule
+            // 2. Gather active Timetable schedule
             TimetableEntity activeSchedule = findActiveTimetableSlot(activeBlocks);
 
-            // 4. Resolve dominant rule via PriorityResolver
+            // 3. Resolve dominant rule via PriorityResolver
             PriorityResolver.ResolutionResult decision = PriorityResolver.resolve(
                     isEmergencyActive,
                     isManualOverride,
-                    isFaceDownSilenced,
                     activeSchedule,
-                    activeWifiZone,
                     activeBlocks
             );
 
-            // 5. Apply sound profile safely
+            // 4. Apply sound profile safely
             String previousMode = soundModeManager.getCurrentRingerMode();
             if (!previousMode.equalsIgnoreCase(decision.soundMode)) {
                 soundModeManager.savePreviousMode();
@@ -140,7 +120,7 @@ public class ContextEngine {
             SoundModeManager.SoundChangeResult changeResult = soundModeManager.applySoundModeWithResult(decision.soundMode);
             String actualAppliedMode = changeResult.actualMode;
 
-            // 6. Persist structured decision & history
+            // 5. Persist structured decision & history
             String formattedTime = new SimpleDateFormat("dd MMM hh:mm a", Locale.getDefault()).format(new Date());
 
             AutomationDecisionEntity decisionEntity = new AutomationDecisionEntity(
@@ -155,16 +135,16 @@ public class ContextEngine {
             );
             database.historyDao().insert(historyEntity);
 
-            // 7. Post structured ContextState object
+            // 6. Post structured ContextState object
             ContextState state = new ContextState(
-                    activeBlocks, activeWifiZone, activeSchedule,
-                    isFaceDownSilenced, isEmergencyActive, isManualOverride,
-                    currentNoiseDb, actualAppliedMode, decision.confidence,
+                    activeBlocks, activeSchedule,
+                    isEmergencyActive, isManualOverride,
+                    actualAppliedMode, decision.confidence,
                     decision.source, decision.reason, decision.priority, now
             );
             mainHandler.post(() -> liveContextState.setValue(state));
 
-            // 8. Wearable & Notification dispatch
+            // 7. Wearable & Notification dispatch
             if (settings == null || settings.isNotificationsEnabled()) {
                 if (!previousMode.equalsIgnoreCase(actualAppliedMode)) {
                     wearableHelper.notifyZoneTransition(

@@ -305,7 +305,7 @@
                     android:id="@+id/tvDiagGeofence"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="📍 Google Play Geofence Client : ✓ Registered"
+                    android:text="📍 Real-Time GPS Location Engine : ✓ Active"
                     android:textColor="#4CAF50"
                     android:textSize="13sp" />
 
@@ -315,24 +315,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="🔄 BootCompleted Receiver     : ✓ Registered (Reboot Safe)"
-                    android:textColor="#4CAF50"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/tvDiagWifiContext"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="📡 Wi-Fi BSSID Indoor Engine   : ✓ Active (Room &amp; Floor)"
-                    android:textColor="#4CAF50"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/tvDiagSensorEngine"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="🔄 Flip-to-Silence Fusion      : ✓ Accelerometer + Proximity"
                     android:textColor="#4CAF50"
                     android:textSize="13sp" />
 
@@ -350,7 +332,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="🚨 VIP Emergency Break-Glass   : ✓ Active (SMS &amp; Cooldown)"
+                    android:text="🚨 VIP Emergency Break-Glass   : ✓ Active (SMS &amp; Call)"
                     android:textColor="#4CAF50"
                     android:textSize="13sp" />
 
@@ -362,16 +344,6 @@
                     android:text="⌚ Wear OS Haptic Dispatches   : ✓ Ready"
                     android:textColor="#4CAF50"
                     android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/tvDiagNoise"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="🎙️ Privacy Noise Estimation    : ✓ In-Memory RMS Ready"
-                    android:textColor="#4CAF50"
-                    android:textSize="13sp" />
-
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
