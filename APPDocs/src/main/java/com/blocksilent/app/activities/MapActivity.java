@@ -36,7 +36,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
     private LatLng selectedLatLng;
-    private float selectedRadius = 50.0f;
+    private float selectedRadius = 15.0f;
 
     private TextView tvCoords;
     private Button btnConfirm;
@@ -50,7 +50,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         btnConfirm = findViewById(R.id.btnConfirmLocation);
 
         if (getIntent().hasExtra(EXTRA_RADIUS)) {
-            selectedRadius = getIntent().getFloatExtra(EXTRA_RADIUS, 50.0f);
+            selectedRadius = getIntent().getFloatExtra(EXTRA_RADIUS, 15.0f);
         }
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);

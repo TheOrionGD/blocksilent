@@ -125,7 +125,7 @@ public class GeofenceManager {
                 }
 
                 String reqId = getRequestIdForBlock(block.getId());
-                float radius = Math.max(block.getRadius(), 25.0f); // Sensible min radius
+                float radius = Math.max(block.getRadius() + 15.0f, 30.0f); // System geofence stability radius
 
                 Geofence geofence = new Geofence.Builder()
                         .setRequestId(reqId)

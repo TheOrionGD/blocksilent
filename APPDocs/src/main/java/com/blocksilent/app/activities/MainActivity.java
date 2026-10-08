@@ -94,6 +94,12 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if (com.blocksilent.app.utils.PermissionManager.hasLocationPermission(this)) {
             new GeofenceManager(getApplicationContext()).registerAllEnabledGeofences();
+            try {
+                Intent serviceIntent = new Intent(this, com.blocksilent.app.services.LocationMonitoringService.class);
+                androidx.core.content.ContextCompat.startForegroundService(this, serviceIntent);
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Failed to start LocationMonitoringService", e);
+            }
         }
     }
 

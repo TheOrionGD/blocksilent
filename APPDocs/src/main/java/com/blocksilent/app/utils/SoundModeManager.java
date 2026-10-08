@@ -194,6 +194,13 @@ public class SoundModeManager {
                 audioManager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
             } else {
                 audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                try {
+                    int maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_RING);
+                    audioManager.setStreamVolume(AudioManager.STREAM_RING, maxVol, 0);
+                    audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, maxVol, 0);
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to restore full volume level on NORMAL mode", e);
+                }
             }
 
             String verifiedMode = verifyActualModeChange();

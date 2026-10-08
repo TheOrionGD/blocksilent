@@ -159,10 +159,12 @@ public class AddEditBlockActivity extends AppCompatActivity {
         }
 
         int checkedId = chipGroupRadius.getCheckedChipId();
+        if (checkedId == R.id.chip15m) return 15.0f;
         if (checkedId == R.id.chip25m) return 25.0f;
+        if (checkedId == R.id.chip50m) return 50.0f;
         if (checkedId == R.id.chip75m) return 75.0f;
         if (checkedId == R.id.chip100m) return 100.0f;
-        return 50.0f; // Default
+        return 15.0f; // Default 15 meters radius
     }
 
     private void loadExistingBlockData(long id) {
@@ -186,7 +188,8 @@ public class AddEditBlockActivity extends AppCompatActivity {
                     }
 
                     float r = block.getRadius();
-                    if (r == 25.0f) chipGroupRadius.check(R.id.chip25m);
+                    if (r == 15.0f) chipGroupRadius.check(R.id.chip15m);
+                    else if (r == 25.0f) chipGroupRadius.check(R.id.chip25m);
                     else if (r == 50.0f) chipGroupRadius.check(R.id.chip50m);
                     else if (r == 75.0f) chipGroupRadius.check(R.id.chip75m);
                     else if (r == 100.0f) chipGroupRadius.check(R.id.chip100m);

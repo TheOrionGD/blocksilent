@@ -48,6 +48,12 @@ public class BootCompletedReceiver extends BroadcastReceiver {
                     } else {
                         Log.d(TAG, "BLOCKSILENT_BOOT: No enabled blocks to restore.");
                     }
+
+                    if (PermissionManager.hasLocationPermission(context)) {
+                        Intent serviceIntent = new Intent(context, com.blocksilent.app.services.LocationMonitoringService.class);
+                        androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent);
+                        Log.d(TAG, "BLOCKSILENT_BOOT: Started LocationMonitoringService on boot.");
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "BLOCKSILENT_BOOT: Error restoring geofences on boot", e);
                 } finally {

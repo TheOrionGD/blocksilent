@@ -127,6 +127,9 @@ public class LocationMonitoringService extends Service {
             boolean wasPreviouslyInside = !insideBlockIds.isEmpty();
             Set<Long> currentlyInside = new HashSet<>();
 
+            float accuracy = (location != null && location.hasAccuracy()) ? location.getAccuracy() : 10.0f;
+            float accuracyBuffer = Math.min(accuracy * 0.5f, 15.0f);
+
             for (BlockEntity block : enabledBlocks) {
                 float[] results = new float[1];
                 Location.distanceBetween(
@@ -136,22 +139,38 @@ public class LocationMonitoringService extends Service {
                 );
                 float distance = results[0];
 
-                if (distance <= block.getRadius()) {
-                    currentlyInside.add(block.getId());
-                    if (!insideBlockIds.contains(block.getId())) {
-                        Log.d(TAG, "AUTOMATIC ENTRY: Inside " + block.getName() + " (Distance: " + distance + "m, Radius: " + block.getRadius() + "m)");
+                float configuredRadius = block.getRadius();
+                // Effective entry radius compensates for real-world GPS tolerance (minimum 25m)
+                float entryRadius = Math.max(configuredRadius + accuracyBuffer, 25.0f);
+                // Exit hysteresis adds a 15m buffer beyond entry radius to prevent premature exits due to GPS jitter
+                float exitRadius = entryRadius + 15.0f;
+
+                boolean isAlreadyInside = insideBlockIds.contains(block.getId());
+
+                if (!isAlreadyInside) {
+                    // Check for NEW ENTRY
+                    if (distance <= entryRadius) {
+                        currentlyInside.add(block.getId());
                         insideBlockIds.add(block.getId());
+                        Log.d(TAG, "AUTOMATIC ENTRY: Inside " + block.getName() + " (Distance: " + String.format(java.util.Locale.US, "%.1f", distance) + "m, Entry Radius: " + entryRadius + "m)");
                         ruleEngine.processBlockEntry(block.getId());
+                    }
+                } else {
+                    // Check if STILL INSIDE (Hysteresis check up to exitRadius)
+                    if (distance <= exitRadius) {
+                        currentlyInside.add(block.getId());
+                    } else {
+                        Log.d(TAG, "AUTOMATIC EXIT BOUNDARY BREACHED: Distance " + String.format(java.util.Locale.US, "%.1f", distance) + "m > Exit Radius " + exitRadius + "m for " + block.getName());
                     }
                 }
             }
 
-            // Detect any blocks that the user has moved outside the radius of
+            // Detect any blocks that the user has moved completely outside the exit radius of
             Set<Long> exitedBlocks = new HashSet<>(insideBlockIds);
             exitedBlocks.removeAll(currentlyInside);
 
             for (Long exitedId : exitedBlocks) {
-                Log.d(TAG, "AUTOMATIC EXIT: Outside radius of block ID " + exitedId);
+                Log.d(TAG, "AUTOMATIC EXIT CONFIRMED: Outside hysteresis zone of block ID " + exitedId);
                 insideBlockIds.remove(exitedId);
                 ruleEngine.processBlockExit(exitedId);
             }
@@ -166,6 +185,9 @@ public class LocationMonitoringService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        createServiceNotificationChannel();
+        startForeground(FOREGROUND_NOTIFICATION_ID, buildForegroundNotification("Active automatic campus block detection"));
+        startLocationUpdates();
         return START_STICKY;
     }
 
