@@ -17,6 +17,7 @@ import com.blocksilent.app.database.entities.SettingsEntity;
 import com.blocksilent.app.database.entities.TimetableEntity;
 import com.blocksilent.app.notifications.NotificationHelper;
 import com.blocksilent.app.utils.SoundModeManager;
+import com.blocksilent.app.utils.TimeUtils;
 import com.blocksilent.app.wearable.WearableNotificationHelper;
 
 import java.text.SimpleDateFormat;
@@ -177,14 +178,23 @@ public class ContextEngine {
                 }
             }
         }
+
+        // Fallback: Check all enabled timetable slots for the current day
+        List<TimetableEntity> allEnabled = database.timetableDao().getEnabledTimetablesSync();
+        if (allEnabled != null) {
+            for (TimetableEntity t : allEnabled) {
+                if (t.isEnabled() && t.getDayOfWeek().equalsIgnoreCase(currentDay)) {
+                    if (isTimeBetween(currentTime, t.getStartTime(), t.getEndTime())) {
+                        return t;
+                    }
+                }
+            }
+        }
+
         return null;
     }
 
     private boolean isTimeBetween(String targetTime, String startTime, String endTime) {
-        try {
-            return targetTime.compareTo(startTime) >= 0 && targetTime.compareTo(endTime) <= 0;
-        } catch (Exception e) {
-            return false;
-        }
+        return TimeUtils.isTimeBetween(targetTime, startTime, endTime);
     }
 }

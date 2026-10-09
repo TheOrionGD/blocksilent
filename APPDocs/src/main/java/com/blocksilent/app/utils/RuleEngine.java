@@ -143,11 +143,7 @@ public class RuleEngine {
     }
 
     private boolean isTimeBetween(String targetTime, String startTime, String endTime) {
-        try {
-            return targetTime.compareTo(startTime) >= 0 && targetTime.compareTo(endTime) <= 0;
-        } catch (Exception e) {
-            return false;
-        }
+        return TimeUtils.isTimeBetween(targetTime, startTime, endTime);
     }
 
     private String getCurrentDayOfWeek() {

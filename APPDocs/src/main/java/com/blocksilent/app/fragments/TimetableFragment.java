@@ -75,7 +75,7 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
             });
         }
 
-        btnAddTimetable.setOnClickListener(v -> showAddTimetableDialog());
+        btnAddTimetable.setOnClickListener(v -> showAddOrEditTimetableDialog(null));
 
         return view;
     }
@@ -127,7 +127,7 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
         }
     }
 
-    private void showAddTimetableDialog() {
+    private void showAddOrEditTimetableDialog(@Nullable TimetableEntity existing) {
         if (!isAdded() || getContext() == null) return;
 
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_timetable, null);
@@ -138,8 +138,15 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
         Spinner spinnerBlock = dialogView.findViewById(R.id.spinnerDialogBlock);
         Spinner spinnerSoundMode = dialogView.findViewById(R.id.spinnerDialogSoundMode);
 
-        final String[] startTimeHolder = {"09:00 AM"};
-        final String[] endTimeHolder = {"10:00 AM"};
+        final String[] startTimeHolder = {existing != null ? existing.getStartTime() : "09:00 AM"};
+        final String[] endTimeHolder = {existing != null ? existing.getEndTime() : "10:00 AM"};
+
+        btnStartTime.setText("Start: " + startTimeHolder[0]);
+        btnEndTime.setText("End: " + endTimeHolder[0]);
+
+        if (existing != null) {
+            etSubject.setText(existing.getSubjectName());
+        }
 
         btnStartTime.setOnClickListener(v -> {
             if (!isAdded() || getContext() == null) return;
@@ -151,7 +158,7 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
                 int h = selectedHour % 12;
                 if (h == 0) h = 12;
                 startTimeHolder[0] = String.format(Locale.US, "%02d:%02d %s", h, selectedMinute, amPm);
-                btnStartTime.setText(startTimeHolder[0]);
+                btnStartTime.setText("Start: " + startTimeHolder[0]);
             }, hour, minute, false);
             mTimePicker.setTitle("Select Start Time");
             mTimePicker.show();
@@ -167,7 +174,7 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
                 int h = selectedHour % 12;
                 if (h == 0) h = 12;
                 endTimeHolder[0] = String.format(Locale.US, "%02d:%02d %s", h, selectedMinute, amPm);
-                btnEndTime.setText(endTimeHolder[0]);
+                btnEndTime.setText("End: " + endTimeHolder[0]);
             }, hour, minute, false);
             mTimePicker.setTitle("Select End Time");
             mTimePicker.show();
@@ -178,10 +185,29 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
         ArrayAdapter<String> dayAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, days);
         spinnerDay.setAdapter(dayAdapter);
 
+        // Pre-select day
+        String targetDay = (existing != null) ? existing.getDayOfWeek() : selectedDayFilter;
+        if (targetDay != null && !"ALL".equalsIgnoreCase(targetDay)) {
+            for (int i = 0; i < days.length; i++) {
+                if (days[i].equalsIgnoreCase(targetDay)) {
+                    spinnerDay.setSelection(i);
+                    break;
+                }
+            }
+        }
+
         // Populate sound modes
         String[] modes = new String[]{"SILENT", "VIBRATE", "NORMAL"};
         ArrayAdapter<String> modeAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, modes);
         spinnerSoundMode.setAdapter(modeAdapter);
+        if (existing != null && existing.getSoundMode() != null) {
+            for (int i = 0; i < modes.length; i++) {
+                if (modes[i].equalsIgnoreCase(existing.getSoundMode())) {
+                    spinnerSoundMode.setSelection(i);
+                    break;
+                }
+            }
+        }
 
         // Populate Blocks from DB
         List<BlockEntity> blockList = new ArrayList<>();
@@ -203,13 +229,24 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
                     if (isAdded() && getContext() != null) {
                         ArrayAdapter<String> blockAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, blockNames);
                         spinnerBlock.setAdapter(blockAdapter);
+
+                        if (existing != null) {
+                            for (int i = 0; i < blockList.size(); i++) {
+                                if (blockList.get(i).getId() == existing.getBlockId()) {
+                                    spinnerBlock.setSelection(i);
+                                    break;
+                                }
+                            }
+                        }
                     }
                 });
             }
         });
 
+        String dialogTitle = (existing != null) ? "Edit Class Timetable" : "Add Class Timetable";
+
         new AlertDialog.Builder(requireContext())
-                .setTitle("Add Class Timetable")
+                .setTitle(dialogTitle)
                 .setView(dialogView)
                 .setPositiveButton("Save", (dialog, which) -> {
                     if (!isAdded() || getContext() == null) return;
@@ -226,18 +263,39 @@ public class TimetableFragment extends Fragment implements TimetableAdapter.OnTi
                     long blockId = (selectedBlockIndex >= 0 && selectedBlockIndex < blockList.size()) ? blockList.get(selectedBlockIndex).getId() : 1;
                     String blockName = (selectedBlockIndex >= 0 && selectedBlockIndex < blockList.size()) ? blockList.get(selectedBlockIndex).getName() : "Campus Block";
 
-                    TimetableEntity timetable = new TimetableEntity(
-                            subject, day, startTimeHolder[0], endTimeHolder[0], blockId, blockName, mode, true
-                    );
+                    if (existing != null) {
+                        existing.setSubjectName(subject);
+                        existing.setDayOfWeek(day);
+                        existing.setStartTime(startTimeHolder[0]);
+                        existing.setEndTime(endTimeHolder[0]);
+                        existing.setBlockId(blockId);
+                        existing.setBlockName(blockName);
+                        existing.setSoundMode(mode);
 
-                    AppDatabase.databaseWriteExecutor.execute(() -> {
-                        if (database != null) {
-                            database.timetableDao().insert(timetable);
-                        }
-                    });
+                        AppDatabase.databaseWriteExecutor.execute(() -> {
+                            if (database != null) {
+                                database.timetableDao().update(existing);
+                            }
+                        });
+                    } else {
+                        TimetableEntity timetable = new TimetableEntity(
+                                subject, day, startTimeHolder[0], endTimeHolder[0], blockId, blockName, mode, true
+                        );
+
+                        AppDatabase.databaseWriteExecutor.execute(() -> {
+                            if (database != null) {
+                                database.timetableDao().insert(timetable);
+                            }
+                        });
+                    }
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    @Override
+    public void onEdit(TimetableEntity timetable) {
+        showAddOrEditTimetableDialog(timetable);
     }
 
     @Override

@@ -21,6 +21,7 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.Time
 
     public interface OnTimetableActionListener {
         void onDelete(TimetableEntity timetable);
+        void onEdit(TimetableEntity timetable);
         void onToggleEnable(TimetableEntity timetable, boolean enabled);
     }
 
@@ -49,6 +50,10 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.Time
     public void onBindViewHolder(@NonNull TimetableViewHolder holder, int position) {
         TimetableEntity item = timetableList.get(position);
         holder.tvSubject.setText(item.getSubjectName());
+
+        String dayTimeStr = item.getDayOfWeek() + " " + item.getStartTime() + " - " + item.getEndTime();
+        holder.tvDayTime.setText(dayTimeStr);
+
         String mode = item.getSoundMode();
         holder.tvBlockMode.setText(item.getBlockName() + " → " + mode);
         if ("SILENT".equalsIgnoreCase(mode)) {
@@ -69,8 +74,18 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.Time
             if (listener != null) listener.onToggleEnable(item, isChecked);
         });
 
+        if (holder.btnEdit != null) {
+            holder.btnEdit.setOnClickListener(v -> {
+                if (listener != null) listener.onEdit(item);
+            });
+        }
+
         holder.btnDelete.setOnClickListener(v -> {
             if (listener != null) listener.onDelete(item);
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onEdit(item);
         });
     }
 
@@ -82,7 +97,7 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.Time
     static class TimetableViewHolder extends RecyclerView.ViewHolder {
         TextView tvSubject, tvDayTime, tvBlockMode;
         SwitchMaterial switchEnable;
-        Button btnDelete;
+        Button btnEdit, btnDelete;
 
         public TimetableViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -90,6 +105,7 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.Time
             tvDayTime = itemView.findViewById(R.id.tvDayTime);
             tvBlockMode = itemView.findViewById(R.id.tvBlockMode);
             switchEnable = itemView.findViewById(R.id.switchEnableTimetable);
+            btnEdit = itemView.findViewById(R.id.btnEditTimetable);
             btnDelete = itemView.findViewById(R.id.btnDeleteTimetable);
         }
     }
